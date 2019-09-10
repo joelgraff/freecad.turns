@@ -1,2 +1,2 @@
 # freecad.turns
-FreeCAD Turns workbench for swept-apth analysis
+FreeCAD Turns workbench for vehicle swept-path / turning analyses for highway intersections and other entrances.
