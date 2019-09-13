@@ -23,29 +23,6 @@
 GUI Initialization module
 """
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-#  First Things First
-#
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-#  --- Copyrights ---
-#
-#  Here at the top of the module, it's good practice to always add
-#  the license text.  Add your name and email, if desired.
-#  Date is optional and reflects the date of first publication *only*.
-#
-#  --- Globals ----
-#
-#  Per standard Python practice, imports are located at the top of the
-#  file, with the exception of workbench commands - more later on that.
-#
-#  Also note the use of the TEMPLATEWB_VERSION constant.  This provides
-#  a quick, easy way to version your workbench and makes it easy for
-#  a user to know which version they're running.
-#
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 import os
 import FreeCADGui as Gui
 import FreeCAD as App
@@ -75,26 +52,6 @@ class template_workbench(Gui.Workbench):
         Constructor
         """
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# The Command Dictionary
-#
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# This dictionary provides a straight-forward, easy way to 
-# manage workbench commands.  It contains a list of all command
-# toolboxes and the locations in the UI where they appear.
-#
-# The top-level items are dictionaries which represent a toolbox
-# to which commands may be assigned.  
-# 
-# The 'gui' value determines the UI locations in which a
-# toolbox appears.
-#
-# The 'cmd' list contains the names of all commands which are
-# assigned to that toolbox.  Commands may be assigned to
-# multiple toolboxes.
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
         self.command_ui = {
 
             'StarterKit': {
@@ -122,21 +79,6 @@ class template_workbench(Gui.Workbench):
         Import commands here
         """
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-#  Starting Up
-#
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-#  When the workbench is first activated (the user explicitly attempts
-#  to load it), the commands are loaded.
-#
-#  Placing imports here, rather than at the top of the file, defers
-#  additional loading when FreeCAD starts, as all workbench classes are
-#  constructed then.
-#
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
         #import commands here to be added to the user interface
         from freecad.workbench_starterkit import my_numpy_function
 
@@ -154,14 +96,6 @@ class template_workbench(Gui.Workbench):
 
         self.appendToolbar("Tools", self.toolbox)
         self.appendMenu("Tools", self.toolbox)
-
-        #Feel free to add diagnostic code or other start-up related
-        #activities...
-        App.Console.PrintMessage("\n\tSwitching to workbench_starterkit")
-
-        App.Console.PrintMessage(
-            "\n\trun a numpy function: sqrt(100) = {}".format(my_numpy_function.my_foo(100))
-        )
 
     def Activated(self):
         """

@@ -1,33 +1,26 @@
+import time
+
+import numpy as np
+
 import FreeCAD as App
 import FreeCADGui as Gui
 
-import numpy as np
 import Part
-
 import Sketcher
 
-import time
-
-from PySide import QtCore
 from PySide import QtGui
 
 from turns.feature_python import FeaturePython, ViewProvider
 
-def create(name="MyDriver"):
-
-    obj = App.ActiveDocument.addObject("Sketcher::SketchObjectPython",name)
-    DriverSketch(obj)
-
-    return obj
 
 def runAAA(obj,vb2,vb,va):
     ta=time.time()
 
     sk=obj
 
+
     try:
         rc=obj.solve()
-
         if rc==0:
             try:
                 obj.setDatum('b2x',vb2.x)
@@ -57,16 +50,14 @@ def runAAA(obj,vb2,vb,va):
                 rc=sk.solve()
 
     except Exception as e:
-        if obj.step != 0:
+        if obj.step:
 #			print "EX ",e
 #			print "step ",obj.step
 #			print "b2",vb2
 #			print "a",va
 #			print "b",vb
-            App.Console.PrintError(" \nEX step"+ str(obj.step)+" "+ str(e)+"\n")
+            App.Console.PrintError('\nEX step"+ str(obj.step)+" "+ str(e)+"\n"')
         rc=-99
-
-    App.Console.PrintWarning('\n\tstep = ' + str(obj.step) + 'rc = ' + str(rc))
 
     if rc==0:
         a=App.ActiveDocument.recompute()
@@ -75,11 +66,11 @@ def runAAA(obj,vb2,vb,va):
         return
 
     for lup in range(1):
-
+        # print "LLLLLLLLLLLOOOOP" ,lup
         sk.deleteAllGeometry()
 
-        va2 = va + vb2 - vb
-        vm = (va2 + vb2) * 0.5
+        va2=va+vb2-vb
+        vm=(va2+vb2)*0.5
 
         b2=sk.addGeometry(Part.Point(vb2))
         b=sk.addGeometry(Part.Point(vb))
@@ -129,7 +120,7 @@ def runAAA(obj,vb2,vb,va):
 
         sk.addConstraint(Sketcher.Constraint('PointOnObject',lab,2,r))
 
-        print ("Move ...")
+    #	print "Move ..."
         try:
             sk.movePoint(m,1,vm,0)
         except Exception as e:
@@ -157,25 +148,28 @@ def runAAA(obj,vb2,vb,va):
         sk.toggleConstruction(b2l)
 
         rc=sk.solve()
-        print ("ergebnis solve a_",rc)
+#		print "ergebnis solve a_",rc
+
 
         sk.addConstraint(Sketcher.Constraint('Symmetric',b2,1,a2,1,m,1))
 
         rc=sk.solve()
-        print ("ergebnis solve aa_",rc)
-        sk.delConstraint(25)
+#		print "ergebnis solve aa_",rc
+#		sk.delConstraint(25)
 
 
         cb=sk.addConstraint(Sketcher.Constraint('Equal',12,8))
         rc=sk.solve()
-        print ("ergebnis solve ac_",rc,"  bei ",cb)
+#		print "ergebnis solve ac_",rc,"  bei ",cb
 
         rc=sk.solve()
-        print ("ergebnis solve ad_",rc)
+#		print "ergebnis solve ad_",rc
+
         sk.addConstraint(Sketcher.Constraint('Equal',11,7))
 
         rc=sk.solve()
-        print ("ergebnis solve ae_",rc)
+#		print "ergebnis solve ae_",rc
+
 
         sk.toggleDriving(a2x)
 
@@ -186,72 +180,66 @@ def runAAA(obj,vb2,vb,va):
         sk.toggleDriving(a2y)
 
         rc=sk.solve()
-        print ("ergebnis solve b_",rc)
+#		print "ergebnis solve b_",rc
 
         sk.addConstraint(Sketcher.Constraint('Equal',6,5))
 
         sk.delConstraint(25)
 
         rc=sk.solve()
-        print ("ergebnis solve d_",rc)
+#		print "ergebnis solve d_",rc
 
-        for i in range(9,27):
-            sk.setVirtualSpace(i, True)
+    #	for i in range(9,27):
+    #		sk.setVirtualSpace(i, True)
 
         rc=sk.solve()
-        print ("ergebnis solve e_",rc)
+#		print "ergebnis solve e_",rc
 
         sk.toggleDriving(b2x)
         rc=sk.solve()
-        print ("ergebnis solve Za_",rc)
+#		print "ergebnis solve Za_",rc
 
         sk.toggleDriving(b2x)
         rc=sk.solve()
-        print ("ergebnis solve Zb_",rc)
+#		print "ergebnis solve Zb_",rc
 
         a=App.ActiveDocument.recompute()
         tb=time.time()
-        print ("\nrecreate sketch time ",round(tb-ta,3))
+        print ('\nrecreate sketch time',round(tb-ta,3))
         if rc==0:
             App.Console.PrintWarning(" new and success step:"+ str(obj.step))
 
-def clearReportView(name):
-
-    mw=Gui.getMainWindow()
-    r=mw.findChild(QtGui.QTextEdit, "Report view")
-    r.clear()
-
-    now = time.ctime(int(time.time()))
-    App.Console.PrintWarning("Cleared Report view " +str(now)+" by " + name+"\n")
-
-
 def updateSketch(obj):
-
     print ("\n!-step:" + str(obj.step) + " for " + obj.Label)
 
     rc=runAAA(obj,obj.b2,obj.b,obj.a)
     obj.a2=App.Vector(obj.getDatum('a2x').Value,obj.getDatum('a2y').Value,)
     obj.a=App.Vector(obj.getDatum('ax').Value,obj.getDatum('ay').Value,)
 
+def create(name="MyDriver"):
+
+    obj = App.ActiveDocument.addObject("Sketcher::SketchObjectPython",name)
+    DriverSketch(obj)
+    return obj
+
 class DriverSketch(FeaturePython):
     '''Sketch Object with Python'''
 
     ##\cond
-    def __init__(self, obj, icon='/home/thomas/.App/Mod/App-nurbs/icons/draw.svg'):
+    def __init__(self, obj, icon='/home/thomas/.FreeCAD/Mod/freecad-nurbs/icons/draw.svg'):
         obj.Proxy = self
         self.Type = self.__class__.__name__
         self.obj2 = obj
         obj.addProperty("App::PropertyBool",'clearReportview', 'Base',"clear window for every execute")
         obj.addProperty("App::PropertyBool",'error', 'Base',"error solving sketch")
-#		obj.addProperty("App::PropertyBool",'autoupdate', 'Base',"auto recompute")
 
         obj.addProperty("App::PropertyLink",'path')
         obj.addProperty("App::PropertyBool",'trackOn')
-        obj.addProperty("App::PropertyLink",'track1')
-        obj.addProperty("App::PropertyLink",'track2')
-        obj.addProperty("App::PropertyLink",'track3')
-        obj.addProperty("App::PropertyLink",'track4')
-        obj.addProperty("App::PropertyLink",'track5')
+        obj.addProperty("App::PropertyLink",'rear_ctr')
+        obj.addProperty("App::PropertyLink",'rear_rt')
+        obj.addProperty("App::PropertyLink",'rear_lt')
+        obj.addProperty("App::PropertyLink",'front_rt')
+        obj.addProperty("App::PropertyLink",'front_lt')
 
         obj.addProperty("App::PropertyBool",'trailerOn')
         obj.addProperty("App::PropertyLink",'truck')
@@ -266,8 +254,6 @@ class DriverSketch(FeaturePython):
         obj.addProperty('App::PropertyVector','a')
         obj.addProperty('App::PropertyFloat','width').width=50.
 
-
-
         ViewProvider(obj.ViewObject)
         self.trackpoints = []
         self.trackpoints2 = []
@@ -275,6 +261,8 @@ class DriverSketch(FeaturePython):
         self.trackpoints4 = []
         self.trackpoints5 = []
         self.trailerpoints=[]
+
+        self.clearReportView("Restart")
     ##\endcond
 
 
@@ -286,14 +274,23 @@ class DriverSketch(FeaturePython):
 
         return
 
+    @staticmethod
+    def clearReportView(name):
+
+        mw=Gui.getMainWindow()
+        r=mw.findChild(QtGui.QTextEdit, "Report view")
+        r.clear()
+        import time
+        now = time.ctime(int(time.time()))
+        App.Console.PrintWarning("Cleared Report view " +str(now)+" by " + name+"\n")
+
     def onChanged(self, obj, prop):
 
-        #print('onchanged', self, obj, prop)
 #
         if prop=='step':
             a2=obj.a2
             if obj.clearReportview:
-                clearReportView(obj.Label)
+                self.clearReportView(obj.Label)
             print ("onChange", prop,obj.Label)
             if not hasattr(obj,'trackOn'): return
 
@@ -322,7 +319,8 @@ class DriverSketch(FeaturePython):
                 obj.a= self.pts[obj.step]+App.Vector(0,-80)
 
 
-                updateSketch(obj)
+                updateSketch(obj
+)
                 a=obj.a
                 b=obj.b
 
@@ -338,12 +336,7 @@ class DriverSketch(FeaturePython):
 
 
             else:
-#				print "Alter Wert"
-#				print "b2",obj.b2
-#				print "b",obj.b
-#				print "a",obj.a
-#
-#				print "--"
+
                 b2= obj.b2
                 a2= obj.a2
 
@@ -352,7 +345,6 @@ class DriverSketch(FeaturePython):
 
                 obj.b2= self.pts[obj.step+1]
 
-#				t2=(b2-obj.a)
                 self.trackpoints += [App.Vector(a2)]
 
                 kvr=0.3*obj.width/50
@@ -375,8 +367,6 @@ class DriverSketch(FeaturePython):
                 alpha=np.arctan2(db.x,db.y)*180.0/np.pi
                 if targ:
                     targ.Placement=App.Placement(App.Vector(b2),App.Rotation(App.Vector(0,0,1),-alpha))
-
-#				print ("okay!! Label,step,trackpoints=", obj.Label,obj.step,len(self.trackpoints))
 
                 try:
                     t2=t2.normalize()
@@ -402,76 +392,56 @@ class DriverSketch(FeaturePython):
 
             if obj.trackOn:
 
-                '''
-                if obj.track1 <> None:
-                    obj.track1.Shape=Part.makePolygon(self.trackpoints+[App.Vector(a2)])
+                if obj.rear_ctr and len(self.trackpoints)>2:
+                    obj.rear_ctr.Shape=Part.makePolygon(self.trackpoints+[App.Vector(a2)])
 
-                if obj.track2 <> None:
-                    obj.track2.Shape=Part.makePolygon(self.trackpoints2+[App.Vector(a2)])
+                if obj.rear_rt and len(self.trackpoints2)>2:
+                    obj.rear_rt.Shape=Part.makePolygon(self.trackpoints2)
 
-                if obj.track3 <> None:
-                    obj.track3.Shape=Part.makePolygon(self.trackpoints3+[App.Vector(a2)])
+                if obj.rear_lt and len(self.trackpoints3)>2:
+                    obj.rear_lt.Shape=Part.makePolygon(self.trackpoints3)
 
-                if obj.track4 <> None:
-                    obj.track4.Shape=Part.makePolygon(self.trackpoints4+[self.trackpoints2[-1],self.trackpoints4[-1],App.Vector(b2)])
+                if obj.front_rt and len(self.trackpoints4)>2:
+                    obj.front_rt.Shape=Part.makePolygon(self.trackpoints4)
 
-
-                if obj.track5 <> None:
-                    obj.track5.Shape=Part.makePolygon(self.trackpoints5+[self.trackpoints3[-1],self.trackpoints5[-1],App.Vector(b2)])
-                '''
-
-
-                if obj.track1 and len(self.trackpoints)>2:
-                    obj.track1.Shape=Part.makePolygon(self.trackpoints+[App.Vector(a2)])
-
-                if obj.track2 and len(self.trackpoints2)>2:
-                    obj.track2.Shape=Part.makePolygon(self.trackpoints2)
-
-                if obj.track3 and len(self.trackpoints3)>2:
-                    obj.track3.Shape=Part.makePolygon(self.trackpoints3)
-
-                if obj.track4 and len(self.trackpoints4)>2:
-                    obj.track4.Shape=Part.makePolygon(self.trackpoints4)
-
-                if obj.track5 and len(self.trackpoints5)>2:
-                    obj.track5.Shape=Part.makePolygon(self.trackpoints5)
+                if obj.front_lt and len(self.trackpoints5)>2:
+                    obj.front_lt.Shape=Part.makePolygon(self.trackpoints5)
 
 
             print ("okay!! Label,step,trackpoints=", obj.Label,obj.step,len(self.trackpoints))
-
-
 
     def someOtherFunction(self):
         print ("run auto update")
         App.ActiveDocument.recompute()
 
     def execute(self,obj):
-        print ('! execute ....' + obj.Label)
-
+        print ("! execute ...."+obj.Label)
 
         obj.recompute()
         try:
             if obj.trackOn:
                 a2=obj.a2
                 b2=obj.b2
-                if obj.track1:
-                    obj.track1.Points=self.trackpoints+[App.Vector(a2)]
-                    obj.track1.Closed=False
+                if obj.rear_ctr:
+                    obj.rear_ctr.Points = self.trackpoints+[App.Vector(a2)]
+                    obj.rear_ctr.Closed = False
 
-                if obj.track2:
-                    obj.track2.Points=self.trackpoints2#+[App.Vector(a2)]
-                    obj.track2.Closed=False
+                if obj.rear_rt:
+                    obj.rear_rt.Points = self.trackpoints2 #+[App.Vector(a2)]
+                    obj.rear_rt.Closed = False
 
-                if obj.track3:
-                    obj.track3.Points=self.trackpoints3#+[App.Vector(a2)]
-                    obj.track3.Closed=False
+                if obj.rear_lt:
+                    obj.rear_lt.Points = self.trackpoints3 #+[App.Vector(a2)]
+                    obj.rear_lt.Closed = False
 
-                if obj.track4:
-                    obj.track4.Points=self.trackpoints4#+[self.trackpoints2[-1],self.trackpoints4[-1],App.Vector(b2)]
-                    obj.track4.Closed=False
+                if obj.front_rt:
+                    obj.front_rt.Points = self.trackpoints4
+                    #+[self.trackpoints2[-1],self.trackpoints4[-1],App.Vector(b2)]
+                    obj.front_rt.Closed = False
 
-                if obj.track5:
-                    obj.track5.Points=self.trackpoints5#+[self.trackpoints3[-1],self.trackpoints5[-1],App.Vector(b2)]
-                    obj.track5.Closed=False
+                if obj.front_lt:
+                    obj.front_lt.Points = self.trackpoints5
+                    #+[self.trackpoints3[-1],self.trackpoints5[-1],App.Vector(b2)]
+                    obj.front_lt.Closed = False
         except:
             pass
