@@ -96,4 +96,4 @@ class ViewProvider:
     def doubleClicked(self,vobj):
         print ("double clicked")
         self.myedit(vobj.Object)
-        print ("Ende double clicked")
+        print ("End double clicked")

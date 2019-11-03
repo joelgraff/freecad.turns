@@ -52,7 +52,7 @@ class Analyze(metaclass=Singleton):
         #list of vehicles to analyze
         self.vehicles = []
 
-        #list of tuples for path cooridnates
+        #list of tuples for path coordinates
         self.path = []
 
         #position along path
