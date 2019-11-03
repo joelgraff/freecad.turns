@@ -74,7 +74,7 @@ class Axle():
         self.vector = np.array([self.vehicle_axis[1], -self.vehicle_axis[0]])
         self.vector *= np.array([[_cos, -_sin],[_sin, _cos]])
 
-        #calcualte the new wheel positions
+        #calculate the new wheel positions
         self.wheels = np.array([
             self.center  + (self.vector * self.offset),
             self.center,

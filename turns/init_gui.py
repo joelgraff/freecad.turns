@@ -33,7 +33,7 @@ TEMPLATEWB_VERSION = '(alpha)'
 
 class template_workbench(Gui.Workbench):
     """
-    class which gets initiated at starup of the gui
+    class which gets initiated at startup of the gui
     """
 
     #Constants for UI locations for toolboxes
