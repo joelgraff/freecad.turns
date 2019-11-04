@@ -28,9 +28,11 @@ import math
 
 import numpy as np
 
+from .. import utils
+
 class Axle():
 
-    def __init__(self, axis, position, offset):
+    def __init__(self, axis, displacement, offset):
         """
         Constructor
 
@@ -44,7 +46,8 @@ class Axle():
         self.vehicle_axis = axis
 
         #displacement along vehicle axial vector from pivot point
-        self.position = position
+        self.displacement = displacement
+        self.position = axis * displacement
 
         #center wheel position
         self.center = self.vehicle_axis * self.position
@@ -61,18 +64,37 @@ class Axle():
         #define initial wheel positions
         self.update(self.angle)
 
+        #wheel positions(left, center, right)
+        self.wheels = None
+
     def update(self, angle):
         """
         Return a list of tuples of the axle wheel coordinates.
         At minimum this is [(left), (center), (right)]
         """
 
-        _cos = math.cos(angle)
-        _sin = math.sin(angle)
+        #rotation computed as:
+        #    x_rot = cos(angle*x) - sin(angle*x)
+        #    y_rot = sin(angle*x) + cos(angle*y)
 
-        #rotate the axle bhy the given angle
-        self.vector = np.array([self.vehicle_axis[1], -self.vehicle_axis[0]])
-        self.vector *= np.array([[_cos, -_sin],[_sin, _cos]])
+        #create axle axis ortho to vehicle axis and multiply by angle
+        _axle_comps = np.array([self.vehicle_axis[1], -self.vehicle_axis[0]])
+        _axle_comps *= angle
+
+        print('\nAxle components = ',_axle_comps)
+
+        #apply trig functions to axis compoents
+        _axle_comps = np.array([
+            math.cos(_axle_comps[0]) - math.sin(_axle_comps[1]),
+            math.sin(_axle_comps[0]) + math.cos(_axle_comps[1])
+        ])
+
+        print('\taxle position =', self.position)
+
+        #new axis
+        self.vector = utils.np_normalize(_axle_comps - self.position)
+
+        print('\tself.vector', self.vector, utils.np_length(self.vector))
 
         #calcualte the new wheel positions
         self.wheels = np.array([

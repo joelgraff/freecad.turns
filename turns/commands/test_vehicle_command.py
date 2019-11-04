@@ -28,11 +28,11 @@ import os
 import FreeCAD as App
 import FreeCADGui as Gui
 
-from PySide import QtGui
-
 from freecad.workbench_starterkit import ICONPATH
 
-class MyCommand2():
+from ..tasks.test_vehicle_task import TestVehicleTask
+
+class TestVehicleCommand1():
     """
     Example Command
     """
@@ -44,9 +44,9 @@ class MyCommand2():
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     resources = {
         'Pixmap'  : os.path.join(ICONPATH, "template_resource.svg"),
-        'Accel'   : "Shift+2",
-        'MenuText': "MyCommand2",
-        'ToolTip' : "Test command #2 for Workbench Starter Kit",
+        'Accel'   : "Shift+1",
+        'MenuText': "TestVehicle",
+        'ToolTip' : "Test Vehicle Command",
         'CmdType' : "ForEdit"
     }
 
@@ -61,12 +61,7 @@ class MyCommand2():
         Activation callback
         """
 
-        #_mw = self.getMainWindow()
-
-        #self.form = _mw.findChild(QtGui.QWidget, 'TaskPanel')
-
-        print('\n\tRuning My Command 2...')
-        print('\n\tUser chose file: ' + self.choose_file())
+        _task = TestVehicleTask()
 
     def IsActive(self):
         """
@@ -82,30 +77,4 @@ class MyCommand2():
 
         return App.ActiveDocument is not None
 
-    def getMainWindow(self):
-        """
-        Return reference to main window
-        """
-        top = QtGui.QApplication.topLevelWidgets()
-
-        for item in top:
-            if item.metaObject().className() == 'Gui::MainWindow':
-                return item
-
-        raise RuntimeError('No main window found')
-
-    def choose_file(self):
-        """
-        Open the file picker dialog and open the file
-        that the user chooses
-        """
-
-        open_path = ICONPATH
-
-        file_name = QtGui.QFileDialog.getOpenFileName(
-            None, 'Select File', open_path
-        )
-
-        return file_name[0]
-
-Gui.addCommand('MyCommand2', MyCommand2())
+Gui.addCommand('MyCommand1', MyCommand1())

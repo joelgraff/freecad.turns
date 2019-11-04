@@ -21,64 +21,21 @@
 #*                                                                     *
 #***********************************************************************
 """
-Swept Path Analysis
+Utility functions
 """
 
-from .support.singleton import Singleton
+import numpy as np
 
-from .model.vehicle import Vehicle
-
-def test():
-
-    a = Analyze()
-
-    _v = Vehicle((8.0, 20.0), 1.0)
-    _v.add_axle(0.0, 3.0)
-    _v.add_axle(10.0, 3.0)
-
-    a.vehicles.append(_v)
-    a.step()
-
-class Analyze(metaclass=Singleton):
+def np_length(np_array):
     """
-    Swept Path Analysis
+    Compute the length of a numpy array
     """
 
-    def __init__(self):
-        """
-        Constructor
-        """
+    return (np_array**2).sum()**0.5
 
-        #list of vehicles to analyze
-        self.vehicles = []
+def np_normalize(np_array):
+    """
+    Compute the normalized (unit-length) vector of a numpy array
+    """
 
-        #list of tuples for path cooridnates
-        self.path = []
-
-        #position along path
-        self.position = 0.0
-
-    def step(self):
-        """
-        Step the analysis along the path
-        """
-
-        angle = self.get_path_tangent()
-
-        for _v in self.vehicles:
-
-            _v.update(angle)
-            print('step', self.position, 'vehicle', _v.points)
-
-            for _a in _v.axles:
-                print(_a.wheels)
-
-    def get_path_tangent(self):
-        """
-        Calculate the tangent at the current position along the path
-        Angle measured ccw+ from x-axis
-        """
-
-        self.position += 0.1
-
-        return self.position
+    return np_array / np_length(np_array)

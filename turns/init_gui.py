@@ -82,7 +82,7 @@ class template_workbench(Gui.Workbench):
         #import commands here to be added to the user interface
         from freecad.workbench_starterkit import my_numpy_function
 
-        from .commands import my_command_1, my_command_2, my_command_3
+        from .commands import test_vehicle_command
 
         #iterate the command toolboxes defined in __init__() and add
         #them to the UI according to the assigned location flags

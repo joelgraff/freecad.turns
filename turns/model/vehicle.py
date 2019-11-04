@@ -28,6 +28,8 @@ import math
 
 import numpy as np
 
+from .. import utils
+
 from .axle import Axle
 
 class Vehicle():
@@ -65,7 +67,7 @@ class Vehicle():
 
         #axle positions along centerline of vehicle
         self.axles = []
-        self.axle_distance = 0.0
+        self.max_displacement = 0.0
 
         self.create_boundary()
 
@@ -84,7 +86,7 @@ class Vehicle():
         _w = self.points[0]/2.0
         _l = -self.points[1]
 
-        self.points = [ (_w, 0.0), (-_w, 0.0), (-_w, _l), (_w, _l) ]
+        self.points = [ (_l, -_w), (-_l, _w), (-_l, _w), (_l, _w) ]
 
         if not self.axis:
 
@@ -98,23 +100,25 @@ class Vehicle():
             ])
 
         #ensure axis is unit length
-        self.axis = self.axis / (self.axis**2).sum()**0.5
+        self.axis = utils.np_normalize(self.axis)
 
         return
 
-    def add_axle(self, position, offset):
+    def add_axle(self, displacement, offset):
         """
         Add an axle.
 
         offset - position of outermost wheels (equidisant from center)
-        position - distance along vehicle axis from pivot point
+        displacement - distance along vehicle axis from pivot point
         """
 
-        self.axles.append(Axle(self.axis, position, offset))
+        self.axles.append(Axle(self.axis, displacement, offset))
+
+        print(self.axles[-1].displacement, self.max_displacement)
 
         #set the axle distance to the farthest-back axle
-        if self.axles[-1].position > self.axle_distance:
-            self.axle_distance = self.axles[-1].position
+        if self.axles[-1].displacement > self.max_displacement:
+            self.max_displacement = self.axles[-1].displacement
 
     def update(self, angle):
         """
@@ -127,7 +131,7 @@ class Vehicle():
 
         for _a in self.axles:
             _a.update(self.angle)
-            _result += _a.wheels
+            _result += [_a.wheels]
 
         return _result
 
