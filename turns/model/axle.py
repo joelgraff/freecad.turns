@@ -96,7 +96,7 @@ class Axle():
 
         print('\tself.vector', self.vector, utils.np_length(self.vector))
 
-        #calcualte the new wheel positions
+        #calculate the new wheel positions
         self.wheels = np.array([
             self.center  + (self.vector * self.offset),
             self.center,
