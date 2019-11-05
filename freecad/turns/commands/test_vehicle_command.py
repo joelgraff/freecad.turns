@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #***********************************************************************
 #*                                                                     *
-#* Copyright (c) 2019 Joel Graff <monograff76@gmail.com>               *
+#* Copyright (c) XXXX FreeCAD Author <freecad_author@gmail.com>               *
 #*                                                                     *
 #* This program is free software; you can redistribute it and/or modify*
 #* it under the terms of the GNU Lesser General Public License (LGPL)  *
@@ -20,75 +20,61 @@
 #* USA                                                                 *
 #*                                                                     *
 #***********************************************************************
-
 """
-Example task template
+Example Command
 """
+import os
 
 import FreeCAD as App
 import FreeCADGui as Gui
 
-import Draft
+from turns import ICONPATH
 
-from .. import resources
-from .base_task import BaseTask
+from ..tasks.test_vehicle_task import TestVehicleTask
 
-class TestVehicleTask(BaseTask):
+class TestVehicleCommand():
     """
-    Test vehicle task template
+    Example Command
     """
 
-    def __init__(self):
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Resource definition allows customization of the command icon,
+    # hotkey, text, tooltip and whether or not the command is active
+    # when a task panel is open
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    resources = {
+        'Pixmap'  : os.path.join(ICONPATH, "template_resource.svg"),
+        'Accel'   : "Shift+1",
+        'MenuText': "TestVehicle",
+        'ToolTip' : "Test Vehicle Command",
+        'CmdType' : "ForEdit"
+    }
+
+    def GetResources(self):
         """
-        Constructor
+        Return the command resources dictionary
+        """
+        return self.resources
+
+    def Activated(self):
+        """
+        Activation callback
         """
 
-        #initialize the inherited base class
-        super().__init__(resources.__path__[0] + '/test_vehicle_panel.ui')
+        _task = TestVehicleTask()
 
-        #Initialize state that will be global to the task here
-        self.view = Gui.ActiveDocument.ActiveView
-
-        #list of tuples, associating the control name with the
-        #signal and task callback
-        self.widgets = [
-            ('back_button', 'clicked', self.step_back_cb),
-            ('play_button', 'clicked', self.play_cb),
-            ('forward_button', 'clicked', self.step_forward_cb)
-        ]
-
-    def setup(self):
+    def IsActive(self):
         """
-        Override of base class method.  Optional
+        Returns always active
         """
 
-        super().setup()
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # IsActive allows the command icon / menu item to be enabled
+        # or disabled depending on various conditions.
+        #
+        # Here, the command is only enabled if a document is open.
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def setp_back_cb(self):
-        """
-        Callback to step the simulation back
-        """
+        return App.ActiveDocument is not None
 
-    def play_cb(self):
-        """
-        Callback to play the simulation
-        """
-
-    def delete_object_callback(self):
-        """
-        Callback to step the simulation forward
-        """
-
-    def accept(self):
-        """
-        Overrides base implementation (optional)
-        """
-
-        super().accept()
-
-    def reject(self):
-        """
-        Overrides base implementation (optional)
-        """
-
-        super().reject()
+Gui.addCommand('TestVehicleCommand', TestVehicleCommand())

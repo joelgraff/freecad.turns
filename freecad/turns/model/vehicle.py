@@ -62,6 +62,9 @@ class Vehicle():
         #points describing boundary of vehicle.
         self.points = points
 
+        #set the pivot point along axis as distance from front
+        self.pivot = pivot
+
         #indices of points which are to be tracked in analysis
         self.track_idx = range(0, len(points))
 

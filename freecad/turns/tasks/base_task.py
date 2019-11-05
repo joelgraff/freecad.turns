@@ -41,6 +41,7 @@ class BaseTask():
         """
         Return reference to main window
         """
+
         top = QtGui.QApplication.topLevelWidgets()
 
         for item in top:
