@@ -42,8 +42,6 @@ class Axis():
         self.end_points = ()
         self.vector = ()
         self.length = length
-
-        print('axis init ', self.center, self.length)
         self.set_vector(vector)
 
     def project(self, displacement):
@@ -62,7 +60,6 @@ class Axis():
         Also calculates axis end points
         """
 
-        print('axis set vector', vector, self.length)
         if vector:
             vector = TupleMath.unit(vector)
 
@@ -95,5 +92,4 @@ class Axis():
         if not is_ccw:
             _signs = (1.0, -1.0)
 
-        print(self.vector)
         return(_signs[0] * self.vector[1], _signs[1] * self.vector[0])

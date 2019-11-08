@@ -24,20 +24,35 @@
 Wheel model object
 """
 
-class Wheel():
+from .body import Body
+from ..support.tuple_math import TupleMath
+
+class Wheel(Body):
     """
     Wheel model object
     """
 
-    def __init__(self):
+    def __init__(self, center, width=0.8333, diameter=1.75):
         """
         Constructor
         """
 
-        self.width = 0.0
-        self.diameter = 0.0
+        self.width = width
+        self.diameter = diameter
         self.angle = 0.0
-        self.center = ()
+        self.center = center
+
+        _top_left = TupleMath.add(center, (-diameter / 2.0, width / 2.0))
+
+        self.points = [
+            _top_left,
+            TupleMath.add(_top_left, (diameter, 0.0)),
+            TupleMath.add(_top_left, (diameter, -width)),
+            TupleMath.add(_top_left, (0.0, -width)),
+            _top_left
+        ]
+
+        super().__init__(self.points)
 
     def update(self):
         """

@@ -28,6 +28,7 @@ from ..support.tuple_math import TupleMath
 
 from .axis import Axis
 from .body import Body
+from .wheel import Wheel
 
 class Vehicle(Body):
     """
@@ -45,13 +46,13 @@ class Vehicle(Body):
 
         super().__init__(points, center, axis)
 
-        print('vehicle stats', self.points, self.axis.end_points)
-
         #indices of points which are to be tracked in analysis
         self.track_idx = range(0, len(points))
 
         #axle positions along centerline of vehicle
         self.axles = []
+        self.wheels = {}
+
         self.max_displacement = 0.0
 
     def add_axle(self, displacement, length):
@@ -62,14 +63,17 @@ class Vehicle(Body):
         displacement - distance along vehicle axis from center point
         """
 
-        print('\n\tadd axle',self.axis.ortho(), self.axis.project(displacement))
         _axle = Axis(vector=self.axis.ortho(), center=self.axis.project(displacement))
 
         _axle.set_length(length)
 
         self.axles.append(_axle)
 
-        return
+        self.wheels[_axle] = (
+            Wheel(_axle.end_points[0]),
+            Wheel(_axle.end_points[1])
+        )
+
         if displacement > self.max_displacement:
             self.max_displacement = displacement
 

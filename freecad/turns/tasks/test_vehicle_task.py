@@ -63,7 +63,7 @@ class TestVehicleTask(BaseTask):
 
         self.tracker = VehicleTracker('car', self.analyzer.vehicles[0])
 
-        self.tracker.insert_into_scenegraph(True)
+        self.tracker.insert_into_scenegraph()
 
     def build_analyzer(self):
         """
@@ -72,9 +72,9 @@ class TestVehicleTask(BaseTask):
 
         _analyzer = Analyze()
 
-        _v = Vehicle((20.0, 8.0))
-        _v.add_axle(9.0, 7.0)
-        _v.add_axle(-9.0, 7.0)
+        _v = Vehicle((19.0, 7.0))
+        _v.add_axle(6.5, 6.0)
+        _v.add_axle(-4.5, 6.0)
 
         _analyzer.vehicles.append(_v)
 

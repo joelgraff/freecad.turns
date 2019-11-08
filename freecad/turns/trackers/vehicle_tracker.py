@@ -42,6 +42,21 @@ class VehicleTracker(Base):
 
         super().__init__(vehicle_name, Gui.ActiveDocument.ActiveView)
 
+        self.body = None
+        self.axis = None
+        self.axles = []
+        self.wheels = []
+
+        self.build_body()
+        self.build_under_carriage()
+
+        self.set_visibility()
+
+    def build_body(self, vehicle):
+        """
+        Construct the body tracker
+        """
+
         _veh_pts = [_p + (0.0,) for _p in vehicle.points]
         _axis_pts = [_p + (0.0,) for _p in vehicle.axis.end_points]
 
@@ -50,19 +65,34 @@ class VehicleTracker(Base):
 
         self.body = LineTracker(self.name + '_body', _veh_pts, self.base)
         self.axis = LineTracker(self.name + '_axis', _axis_pts, self.base)
-        self.axles = []
 
+    def build_under_carriage(self, vehicle):
+        """
+        Construct the vehicle axles
+        """
+
+        _nm = self.name + '_{}.{}'
+
+        #build the axles
         for _i, _a in enumerate(vehicle.axles):
 
             _pts = [_p + (0.0,) for _p in _a.end_points]
 
             self.axles.append(
-                LineTracker(self.name + '_axle' + str(_i), _pts, self.base)
+                LineTracker(_nm.format('axle', str(_i)), _pts, self.base)
             )
 
-        #    _wheels = []
+        _i = 0
 
-        #    for _p in _a.wheels:
-        #        _wheels.append(_p + (0.0,))
+        #build the wheels
+        for _pair in vehicle.wheels.values():
 
-        self.set_visibility()
+            for _w in _pair:
+
+                _pts = [_p + (0.0,) for _p in _w.points]
+
+                self.wheels.append(
+                    LineTracker(_nm.format('wheel', str(_i)), _pts, self.base)
+                )
+
+                _i += 1
