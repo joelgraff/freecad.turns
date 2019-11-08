@@ -28,6 +28,11 @@ Example task template
 import FreeCADGui as Gui
 
 from .. import resources
+
+from ..analyze import Analyze
+from ..model.vehicle import Vehicle
+from ..trackers.vehicle_tracker import VehicleTracker
+
 from .base_task import BaseTask
 
 class TestVehicleTask(BaseTask):
@@ -41,7 +46,7 @@ class TestVehicleTask(BaseTask):
         """
 
         #initialize the inherited base class
-        super().__init__(resources.__path__[0] + '/test_vehicle_panel.ui')
+        super().__init__(resources.__path__[0] + '/test_vehicle.ui')
 
         #Initialize state that will be global to the task here
         self.view = Gui.ActiveDocument.ActiveView
@@ -54,10 +59,33 @@ class TestVehicleTask(BaseTask):
             ('forward_button', 'clicked', self.step_forward_cb)
         ]
 
+        self.analyzer = self.build_analyzer()
+
+        self.tracker = VehicleTracker('car', self.analyzer.vehicles[0])
+
+        self.tracker.insert_into_scenegraph(True)
+
+    def build_analyzer(self):
+        """
+        Create analyzer for vehicle
+        """
+
+        _analyzer = Analyze()
+
+        _v = Vehicle((20.0, 8.0))
+        _v.add_axle(9.0, 7.0)
+        _v.add_axle(-9.0, 7.0)
+
+        _analyzer.vehicles.append(_v)
+
+        return _analyzer
+
     def step_forward_cb(self):
         """
         Step forward callback
         """
+
+        self.analyzer.step()
 
     def step_back_cb(self):
         """

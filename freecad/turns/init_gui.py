@@ -24,7 +24,7 @@ GUI Initialization module
 """
 
 import os
-import FreeCAD as App
+
 import FreeCADGui as Gui
 
 from freecad.turns import ICONPATH
@@ -56,9 +56,9 @@ class TurnsWorkbench(Gui.Workbench):
         self.command_ui = {
 
             'Turns': {
-                'gui': self.MENU,
+                'gui': self.MENU + self.TOOLBAR,
                 'cmd': ['TestVehicleCommand']
-            },
+            }
         }
 
     def GetClassName(self):
@@ -85,8 +85,6 @@ class TurnsWorkbench(Gui.Workbench):
 
         self.appendToolbar("Tools", self.toolbox)
         self.appendMenu("Tools", self.toolbox)
-
-        App.Console.PrintMessage('Switching to Turns Workbench...')
 
     def Activated(self):
         """

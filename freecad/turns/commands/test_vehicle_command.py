@@ -28,7 +28,7 @@ import os
 import FreeCAD as App
 import FreeCADGui as Gui
 
-from turns import ICONPATH
+from freecad.turns import ICONPATH
 
 from ..tasks.test_vehicle_task import TestVehicleTask
 
@@ -62,6 +62,9 @@ class TestVehicleCommand():
         """
 
         _task = TestVehicleTask()
+        Gui.Control.showDialog(_task)
+        _task.setup()
+
 
     def IsActive(self):
         """

@@ -24,46 +24,28 @@
 Vehicle model object
 """
 
-import math
+from ..support.tuple_math import TupleMath
 
-import numpy as np
+from .axis import Axis
+from .body import Body
 
-from .. import utils
-
-from .axle import Axle
-
-class Vehicle():
+class Vehicle(Body):
     """
     Vehicle model object
     """
 
-    def __init__(self, points, pivot, axis=None):
+    def __init__(self, points, center=None, axis=None):
         """
         Constructor
 
-        points - Tuple of 2D float coordinates defining vehicle edges
-                 A single coordinate pair is treated as (width, length)
-                 Points must describe vehicle in horizontal orienattion
-                 with front centered at the origin (0.0, 0.0)
-    
-        pivot - The pivot point as a float along the vehicle axis.
-
-        axis - The axis along which axles are positioned, as an iterable
-               of 2 floats
-
-               Unless defined, calculated as:
-                  x - distance of extrema
-                  y - average of extrema
+        points - Tuple of 2D float coordinates defining vehicle border
+        center - The vehicle center as a 2D coordinate tuple
+        axis - The axis along which axles are positioned. 2D vector tuple
         """
 
-        #long axis of vehicle
-        self.axis = axis
+        super().__init__(points, center, axis)
 
-        #points describing boundary of vehicle.
-        self.points = points
-
-        #set the pivot point along axis as distance from front
-        self.pivot = pivot
+        print('vehicle stats', self.points, self.axis.end_points)
 
         #indices of points which are to be tracked in analysis
         self.track_idx = range(0, len(points))
@@ -72,56 +54,24 @@ class Vehicle():
         self.axles = []
         self.max_displacement = 0.0
 
-        self.create_boundary()
-
-    def create_boundary(self):
-        """
-        Create the boundary of the vehicle
-        """
-
-        #creation only applies to points = (width, length)
-        if not isinstance(self.points[0], float):
-            return
-
-        if len(self.points) != 2:
-            return
-
-        _w = self.points[0]/2.0
-        _l = -self.points[1]
-
-        self.points = [ (_l, -_w), (-_l, _w), (-_l, _w), (_l, _w) ]
-
-        if not self.axis:
-
-            _x_coords = [_v[0] for _v in self.points]
-            _y_coords = [_v[1] for _v in self.points]
-
-            #axis is directed from front to rear
-            self.axis = np.array([
-                min(_x_coords) - max(_x_coords),
-                min(_y_coords) - max(_y_coords)
-            ])
-
-        #ensure axis is unit length
-        self.axis = utils.np_normalize(self.axis)
-
-        return
-
-    def add_axle(self, displacement, offset):
+    def add_axle(self, displacement, length):
         """
         Add an axle.
 
-        offset - position of outermost wheels (equidisant from center)
-        displacement - distance along vehicle axis from pivot point
+        length - total length of axle
+        displacement - distance along vehicle axis from center point
         """
 
-        self.axles.append(Axle(self.axis, displacement, offset))
+        print('\n\tadd axle',self.axis.ortho(), self.axis.project(displacement))
+        _axle = Axis(vector=self.axis.ortho(), center=self.axis.project(displacement))
 
-        print(self.axles[-1].displacement, self.max_displacement)
+        _axle.set_length(length)
 
-        #set the axle distance to the farthest-back axle
-        if self.axles[-1].displacement > self.max_displacement:
-            self.max_displacement = self.axles[-1].displacement
+        self.axles.append(_axle)
+
+        return
+        if displacement > self.max_displacement:
+            self.max_displacement = displacement
 
     def update(self, angle):
         """

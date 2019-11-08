@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#**************************************************************************
+#***********************************************************************
 #*                                                                     *
 #* Copyright (c) 2019 Joel Graff <monograff76@gmail.com>               *
 #*                                                                     *
@@ -20,22 +20,49 @@
 #* USA                                                                 *
 #*                                                                     *
 #***********************************************************************
+
 """
-Utility functions
+Vehicle Tracker class
 """
 
-import numpy as np
+import FreeCADGui as Gui
 
-def np_length(np_array):
-    """
-    Compute the length of a numpy array
-    """
+from pivy_trackers.tracker.line_tracker import LineTracker
+from pivy_trackers.trait.base import Base
 
-    return (np_array**2).sum()**0.5
-
-def np_normalize(np_array):
+class VehicleTracker(Base):
     """
-    Compute the normalized (unit-length) vector of a numpy array
+    Vehicle Tracker class
     """
 
-    return np_array / np_length(np_array)
+    def __init__(self, vehicle_name, vehicle):
+        """
+        Constructor
+        """
+
+        super().__init__(vehicle_name, Gui.ActiveDocument.ActiveView)
+
+        _veh_pts = [_p + (0.0,) for _p in vehicle.points]
+        _axis_pts = [_p + (0.0,) for _p in vehicle.axis.end_points]
+
+        #add the first to the end to create a closed polygon
+        _veh_pts.append(_veh_pts[0])
+
+        self.body = LineTracker(self.name + '_body', _veh_pts, self.base)
+        self.axis = LineTracker(self.name + '_axis', _axis_pts, self.base)
+        self.axles = []
+
+        for _i, _a in enumerate(vehicle.axles):
+
+            _pts = [_p + (0.0,) for _p in _a.end_points]
+
+            self.axles.append(
+                LineTracker(self.name + '_axle' + str(_i), _pts, self.base)
+            )
+
+        #    _wheels = []
+
+        #    for _p in _a.wheels:
+        #        _wheels.append(_p + (0.0,))
+
+        self.set_visibility()
