@@ -31,7 +31,7 @@ from .. import resources
 
 from ..analyze import Analyze
 from ..model.vehicle import Vehicle
-from ..trackers.vehicle_tracker import VehicleTracker
+from ..trackers.analysis_tracker import AnalysisTracker
 
 from .base_task import BaseTask
 
@@ -60,8 +60,10 @@ class TestVehicleTask(BaseTask):
         ]
 
         self.analyzer = self.build_analyzer()
+        self.tracker = AnalysisTracker()
 
-        self.tracker = VehicleTracker('car', self.analyzer.vehicles[0])
+        for _i, _v in enumerate(self.analyzer.vehicles):
+            self.tracker.add_vehicle(_v)
 
         self.tracker.insert_into_scenegraph()
 
@@ -86,6 +88,9 @@ class TestVehicleTask(BaseTask):
         """
 
         self.analyzer.step()
+
+        for _v in self.analyzer.bvehicles:
+            self.tracker.update(_v)
 
     def step_back_cb(self):
         """

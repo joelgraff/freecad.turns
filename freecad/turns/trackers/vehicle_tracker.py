@@ -35,20 +35,20 @@ class VehicleTracker(Base):
     Vehicle Tracker class
     """
 
-    def __init__(self, vehicle_name, vehicle):
+    def __init__(self, name, data, parent):
         """
         Constructor
         """
 
-        super().__init__(vehicle_name, Gui.ActiveDocument.ActiveView)
+        super().__init__(name=name, parent=parent)
 
         self.body = None
         self.axis = None
         self.axles = []
         self.wheels = []
 
-        self.build_body()
-        self.build_under_carriage()
+        self.build_body(data)
+        self.build_under_carriage(data)
 
         self.set_visibility()
 
@@ -62,6 +62,8 @@ class VehicleTracker(Base):
 
         #add the first to the end to create a closed polygon
         _veh_pts.append(_veh_pts[0])
+
+        print(_veh_pts)
 
         self.body = LineTracker(self.name + '_body', _veh_pts, self.base)
         self.axis = LineTracker(self.name + '_axis', _axis_pts, self.base)
@@ -96,3 +98,15 @@ class VehicleTracker(Base):
                 )
 
                 _i += 1
+
+    def update(self, vehicle):
+        """
+        Update the vehicle geometry
+        """
+
+        for _pair in vehicle.wheels.values():
+
+            for _i, _wheel in enumerate(_pair):
+
+                _angle = self.wheels[_i].get_rotation() + _wheel.angle
+                self.wheels[_i].top.set_rotation(vehicle.center, _angle)

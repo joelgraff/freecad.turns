@@ -70,9 +70,6 @@ class Analyze(metaclass=Singleton):
             _v.update(angle)
             print('step', self.position, 'vehicle', _v.points)
 
-            for _a in _v.axles:
-                print(_a.wheels)
-
     def get_path_tangent(self):
         """
         Calculate the tangent at the current position along the path

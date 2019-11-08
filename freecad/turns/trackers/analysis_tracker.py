@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#**************************************************************************
+#***********************************************************************
 #*                                                                     *
 #* Copyright (c) 2019 Joel Graff <monograff76@gmail.com>               *
 #*                                                                     *
@@ -20,36 +20,48 @@
 #* USA                                                                 *
 #*                                                                     *
 #***********************************************************************
+
 """
-Wheel model object
+Analysis Tracker class
 """
 
-from .body import Body
-from ..support.tuple_math import TupleMath
+import FreeCADGui as Gui
 
-class Wheel(Body):
+from pivy_trackers.trait.base import Base
+from .vehicle_tracker import VehicleTracker
+
+class AnalysisTracker(Base):
     """
-    Wheel model object
+    Analysis Tracker class
     """
 
-    def __init__(self, center, width=0.8333, diameter=1.75):
+    def __init__(self):
         """
         Constructor
         """
 
-        self.width = width
-        self.diameter = diameter
-        self.angle = 0.0
-        self.center = center
+        super().__init__(
+            name='AnalysisTracker',
+            view=Gui.ActiveDocument.ActiveView
+        )
 
-        _top_left = TupleMath.add(center, (-diameter / 2.0, width / 2.0))
+        self.trackers = []
 
-        self.points = [
-            _top_left,
-            TupleMath.add(_top_left, (diameter, 0.0)),
-            TupleMath.add(_top_left, (diameter, -width)),
-            TupleMath.add(_top_left, (0.0, -width)),
-            _top_left
-        ]
+        self.set_visibility()
 
-        super().__init__(self.points)
+    def add_vehicle(self, vehicle):
+        """
+        Add a vehicle tracker as described by the Vehicle model object
+        """
+
+        _idx = str(len(self.trackers))
+
+        self.trackers.append(
+            VehicleTracker(name='car.' + _idx, data=vehicle, parent=self.base))
+
+    def update(self, index, vehicle):
+        """
+        Update the vehicle in the tracker
+        """
+
+        self.trackers[index].update(vehicle)

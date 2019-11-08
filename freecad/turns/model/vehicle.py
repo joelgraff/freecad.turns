@@ -24,6 +24,8 @@
 Vehicle model object
 """
 
+import math
+
 from ..support.tuple_math import TupleMath
 
 from .axis import Axis
@@ -51,9 +53,12 @@ class Vehicle(Body):
 
         #axle positions along centerline of vehicle
         self.axles = []
+        self.axle_dists = []
+        self.axle_distance = 0.0
         self.wheels = {}
-
-        self.max_displacement = 0.0
+        self.delta = 0.0
+        self.radius = 0.0
+        self.center = None
 
     def add_axle(self, displacement, length):
         """
@@ -74,25 +79,53 @@ class Vehicle(Body):
             Wheel(_axle.end_points[1])
         )
 
-        if displacement > self.max_displacement:
-            self.max_displacement = displacement
+        self.axle_dists.append(displacement)
+        self.axle_distance = abs(max(self.axle_dists) - min(self.axle_dists))
 
     def update(self, angle):
         """
-        Update the vehicle position using the given turn angle (radians)
+        Update the vehicle position using the given steering angle (radians)
         """
 
+        # The angle subtended by the radius of the arc on which the front and
+        # center wheel midpoints lie is equal to the steering angle.
+        #
+        # The radius is the distance between the axles divided by
+        # the tangent of the steering angle
+        #
+        # The wheel angles are the arctangent of the axle distance divided by
+        # the radius, offset by half the vehicle width.
+        #
+        # The arc direction is -cw / +ccw
         _result = []
 
         self.angle = angle
+        self.radius = self.axle_distance / math.tan(math.pi / 2.0 - angle)
 
-        for _a in self.axles:
-            _a.update(self.angle)
-            _result += [_a.wheels]
+        #sign of angle to add / subtract from central steering angle.
+        #relative to ccw-oriented (left-hand) wheel
+        _sign = math.copysign(1.0, angle)
+
+        _back_axle = self.axle_dists.index(min(self.axle_dists))
+        _back_center = self.axles[_back_axle].center
+        _back_vector = self.axles[_back_axle].ortho(_sign > 0.0)
+
+        self.center = TupleMath.add(
+            _back_center,
+            TupleMath.scale(_back_vector, self.radius * -_sign)
+        )
+
+        #iterate each wheel pair.  Left wheel is first in pair
+        for _axle, _wheels in self.wheels.items():
+
+            #The wheel angle is the extra angle for each wheel
+            #added to the central stering angle
+            _wheel_angle = math.atan(self.axle_distance / (_axle.length/2.0))
+
+            _wheels[0].angle = _sign * _wheel_angle
+            _wheels[1].angle = -_sign * _wheel_angle
 
         return _result
-
-        #_radius = self.axle_distance / math.tan(math.pi/2.0 - angle)
 
 # INPUTS
 #
