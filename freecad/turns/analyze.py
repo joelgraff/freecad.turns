@@ -68,7 +68,7 @@ class Analyze(metaclass=Singleton):
         for _v in self.vehicles:
 
             _v.update(angle)
-            print('step', self.position, 'vehicle', _v.points)
+            print('step', angle, self.position, 'vehicle', _v.points)
 
     def get_path_tangent(self):
         """

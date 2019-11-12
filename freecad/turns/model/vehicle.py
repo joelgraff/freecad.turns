@@ -37,7 +37,25 @@ class Vehicle(Body):
     Vehicle model object
     """
 
-    def __init__(self, points, center=None, axis=None):
+    class Axle(Axis):
+
+        def __init__(self, axis, length, displacement, is_fixed):
+            """
+            Axle sublclass to manage wheels
+            """
+
+            self.vector = axis.ortho()
+            self.center = axis.project(displacement)
+            self.set_length(length)
+
+            self.wheels = [
+                Wheel(self.end_points[0]),
+                Wheel(self.end_points[1])
+            ]
+
+            self.is_fixed = is_fixed
+
+    def __init__(self, name, points, center=None, axis=None):
         """
         Constructor
 
@@ -55,12 +73,12 @@ class Vehicle(Body):
         self.axles = []
         self.axle_dists = []
         self.axle_distance = 0.0
-        self.wheels = {}
         self.delta = 0.0
         self.radius = 0.0
         self.center = None
+        self.name = name
 
-    def add_axle(self, displacement, length):
+    def add_axle(self, displacement, length, is_fixed=True):
         """
         Add an axle.
 
@@ -68,17 +86,11 @@ class Vehicle(Body):
         displacement - distance along vehicle axis from center point
         """
 
-        _axle = Axis(vector=self.axis.ortho(), center=self.axis.project(displacement))
-
-        _axle.set_length(length)
+        _axle = Vehicle.Axle(
+            axis=self.axis, length=length,
+            displacement=displacement, is_fixed=is_fixed)
 
         self.axles.append(_axle)
-
-        self.wheels[_axle] = (
-            Wheel(_axle.end_points[0]),
-            Wheel(_axle.end_points[1])
-        )
-
         self.axle_dists.append(displacement)
         self.axle_distance = abs(max(self.axle_dists) - min(self.axle_dists))
 
@@ -98,13 +110,15 @@ class Vehicle(Body):
         #
         # The arc direction is -cw / +ccw
         _result = []
+        _half_pi = math.pi / 2.0
 
-        self.angle = angle
-        self.radius = self.axle_distance / math.tan(math.pi / 2.0 - angle)
+        self.axis.angle = angle
+        self.radius = self.axle_distance / math.atan(angle)
 
+        print('axle_dist / angle', self.axle_distance, angle)
         #sign of angle to add / subtract from central steering angle.
         #relative to ccw-oriented (left-hand) wheel
-        _sign = math.copysign(1.0, angle)
+        _sign = 1.0 # math.copysign(1.0, angle)
 
         _back_axle = self.axle_dists.index(min(self.axle_dists))
         _back_center = self.axles[_back_axle].center
@@ -116,14 +130,24 @@ class Vehicle(Body):
         )
 
         #iterate each wheel pair.  Left wheel is first in pair
-        for _axle, _wheels in self.wheels.items():
+        for _axle in self.axles:
+
+            if _axle.is_fixed:
+                continue
 
             #The wheel angle is the extra angle for each wheel
-            #added to the central stering angle
-            _wheel_angle = math.atan(self.axle_distance / (_axle.length/2.0))
+            #added to the central steering angle
 
-            _wheels[0].angle = _sign * _wheel_angle
-            _wheels[1].angle = -_sign * _wheel_angle
+            print('\n\tradius = ', self.radius)
+            _wheel_angles = (
+                _sign * self.axle_distance / (self.radius + _axle.length/2.0),
+                _sign * self.axle_distance / (self.radius - _axle.length/2.0)
+            )
+
+            print('\n\twheel angles = ', [math.atan(_v) for _v in _wheel_angles])
+
+            _axle.wheels[0].angle = math.atan(_wheel_angles[0])
+            _axle.wheels[1].angle = math.atan(_wheel_angles[1])
 
         return _result
 

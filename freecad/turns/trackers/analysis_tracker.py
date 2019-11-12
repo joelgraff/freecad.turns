@@ -45,7 +45,7 @@ class AnalysisTracker(Base):
             view=Gui.ActiveDocument.ActiveView
         )
 
-        self.trackers = []
+        self.trackers = {}
 
         self.set_visibility()
 
@@ -56,12 +56,12 @@ class AnalysisTracker(Base):
 
         _idx = str(len(self.trackers))
 
-        self.trackers.append(
-            VehicleTracker(name='car.' + _idx, data=vehicle, parent=self.base))
+        self.trackers[vehicle.name] =\
+            VehicleTracker(name=vehicle.name, data=vehicle, parent=self.base)
 
-    def update(self, index, vehicle):
+    def update(self, vehicle):
         """
         Update the vehicle in the tracker
         """
 
-        self.trackers[index].update(vehicle)
+        self.trackers[vehicle.name].update(vehicle)

@@ -65,7 +65,7 @@ class TestVehicleTask(BaseTask):
         for _i, _v in enumerate(self.analyzer.vehicles):
             self.tracker.add_vehicle(_v)
 
-        self.tracker.insert_into_scenegraph()
+        self.tracker.insert_into_scenegraph(True)
 
     def build_analyzer(self):
         """
@@ -74,8 +74,8 @@ class TestVehicleTask(BaseTask):
 
         _analyzer = Analyze()
 
-        _v = Vehicle((19.0, 7.0))
-        _v.add_axle(6.5, 6.0)
+        _v = Vehicle('car.1', (19.0, 7.0))
+        _v.add_axle(6.5, 6.0, False)
         _v.add_axle(-4.5, 6.0)
 
         _analyzer.vehicles.append(_v)
@@ -89,7 +89,7 @@ class TestVehicleTask(BaseTask):
 
         self.analyzer.step()
 
-        for _v in self.analyzer.bvehicles:
+        for _v in self.analyzer.vehicles:
             self.tracker.update(_v)
 
     def step_back_cb(self):

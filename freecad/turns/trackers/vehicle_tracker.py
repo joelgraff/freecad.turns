@@ -45,12 +45,13 @@ class VehicleTracker(Base):
         self.body = None
         self.axis = None
         self.axles = []
-        self.wheels = []
+        self.wheels = {}
 
         self.build_body(data)
         self.build_under_carriage(data)
 
         self.set_visibility()
+        self.name = name
 
     def build_body(self, vehicle):
         """
@@ -84,29 +85,39 @@ class VehicleTracker(Base):
                 LineTracker(_nm.format('axle', str(_i)), _pts, self.base)
             )
 
-        _i = 0
-
         #build the wheels
-        for _pair in vehicle.wheels.values():
+        for _axle in vehicle.axles:
 
-            for _w in _pair:
+            print(_axle.wheels)
 
-                _pts = [_p + (0.0,) for _p in _w.points]
+            for _wheel in _axle.wheels:
 
-                self.wheels.append(
-                    LineTracker(_nm.format('wheel', str(_i)), _pts, self.base)
-                )
+                _pts = [_p + (0.0,) for _p in _wheel.points]
 
-                _i += 1
+                _lt = LineTracker(
+                    _nm.format('wheel', str(len(self.wheels))),
+                    _pts, self.base)
+
+                _lt.geometry.transform.center.setValue(
+                    _wheel.center + (0.0,))
+
+                self.wheels[_wheel] = _lt
 
     def update(self, vehicle):
         """
         Update the vehicle geometry
         """
 
-        for _pair in vehicle.wheels.values():
+        for _axle in vehicle.axles:
 
-            for _i, _wheel in enumerate(_pair):
+            print(_axle.is_fixed)
+            if _axle.is_fixed:
+                continue
 
-                _angle = self.wheels[_i].get_rotation() + _wheel.angle
-                self.wheels[_i].top.set_rotation(vehicle.center, _angle)
+            for _wheel in _axle.wheels:
+
+                _ctr = _wheel.center + (0.0,)
+
+                print('wheel rotate = ', _ctr, _wheel.angle)
+
+                self.wheels[_wheel].geometry.set_rotation(_wheel.angle)
