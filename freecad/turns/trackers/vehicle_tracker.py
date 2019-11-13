@@ -29,8 +29,12 @@ import FreeCADGui as Gui
 
 from pivy_trackers.tracker.line_tracker import LineTracker
 from pivy_trackers.trait.base import Base
+from pivy_trackers.trait.geometry import Geometry
+from pivy_trackers.trait.style import Style
 
-class VehicleTracker(Base):
+from ..support.tuple_math import TupleMath
+
+class VehicleTracker(Base, Style, Geometry):
     """
     Vehicle Tracker class
     """
@@ -46,30 +50,45 @@ class VehicleTracker(Base):
         self.axis = None
         self.axles = []
         self.wheels = {}
+        self.radius_tracker = []
 
-        self.build_body(data)
-        self.build_under_carriage(data)
+        self.vehicle = data
+
+        self.build_body()
+        self.build_under_carriage()
+        self.build_radius_tracker()
 
         self.set_visibility()
         self.name = name
 
-    def build_body(self, vehicle):
+
+    def build_radius_tracker(self):
+        """
+        Create radius trackers for visualizing the vehicle turning radius
+        """
+
+        _pts = [(0.0, 0.0, 0.0)]*6
+
+        self.radius_tracker = \
+            LineTracker(name='radius', points=_pts, parent=self.base)
+
+        self.radius_tracker.line.numVertices.setValues(0, 2, (3, 3))
+
+    def build_body(self):
         """
         Construct the body tracker
         """
 
-        _veh_pts = [_p + (0.0,) for _p in vehicle.points]
-        _axis_pts = [_p + (0.0,) for _p in vehicle.axis.end_points]
+        _veh_pts = [_p + (0.0,) for _p in self.vehicle.points]
+        _axis_pts = [_p + (0.0,) for _p in self.vehicle.axis.end_points]
 
         #add the first to the end to create a closed polygon
         _veh_pts.append(_veh_pts[0])
 
-        print(_veh_pts)
-
         self.body = LineTracker(self.name + '_body', _veh_pts, self.base)
         self.axis = LineTracker(self.name + '_axis', _axis_pts, self.base)
 
-    def build_under_carriage(self, vehicle):
+    def build_under_carriage(self):
         """
         Construct the vehicle axles
         """
@@ -77,7 +96,7 @@ class VehicleTracker(Base):
         _nm = self.name + '_{}.{}'
 
         #build the axles
-        for _i, _a in enumerate(vehicle.axles):
+        for _i, _a in enumerate(self.vehicle.axles):
 
             _pts = [_p + (0.0,) for _p in _a.end_points]
 
@@ -86,9 +105,7 @@ class VehicleTracker(Base):
             )
 
         #build the wheels
-        for _axle in vehicle.axles:
-
-            print(_axle.wheels)
+        for _axle in self.vehicle.axles:
 
             for _wheel in _axle.wheels:
 
@@ -103,21 +120,70 @@ class VehicleTracker(Base):
 
                 self.wheels[_wheel] = _lt
 
-    def update(self, vehicle):
+    def transform_points(self, points, node):
+        """
+        Override of super function
+        """
+
+        for _i, _p in enumerate(points):
+            points[_i] = _p + (0.0,)
+
+        return super().transform_points(points, node)
+
+    def update_radius(self):
+        """
+        Update the radius tracker
+        """
+
+        _wheels = self.vehicle.turn_axle.wheels
+
+        print('wheels',_wheels)
+        print(self.vehicle.fixed_axle, self.vehicle.turn_axle)
+        print(self.vehicle.fixed_axle.center, self.vehicle.turn_axle.center)
+        print(self.vehicle.axles)
+
+        _axle_centers = self.transform_points(
+            [self.vehicle.fixed_axle.center, self.vehicle.turn_axle.center],
+            self.geometry.coordinate
+        )
+
+        print('axle centers',_axle_centers)
+
+        _wheel_centers = [
+            self.wheels[_wheels[0]].transform_points(
+                [_wheels[0].center + (0.0,)], self.geometry.coordinate)[0],
+
+            self.wheels[_wheels[1]].transform_points(
+                [_wheels[1].center + (0.0,)], self.geometry.coordinate)[0]
+        ]
+
+        print('wheel centers',_wheel_centers)
+        _ortho = \
+            TupleMath.scale(self.vehicle.axis.ortho(), self.vehicle.radius)
+
+
+        _center = TupleMath.add(_ortho, _axle_centers[0]) + (0.0,)
+
+        _pts = [
+            _axle_centers[0], _center, _axle_centers[1],
+            _wheel_centers[0], _center, _wheel_centers[1]
+        ]
+
+        print(_pts)
+        self.radius_tracker.update(points=_pts, notify=False)
+    def update(self):
         """
         Update the vehicle geometry
         """
 
-        for _axle in vehicle.axles:
+        for _axle in self.vehicle.axles:
 
-            print(_axle.is_fixed)
             if _axle.is_fixed:
                 continue
 
             for _wheel in _axle.wheels:
 
                 _ctr = _wheel.center + (0.0,)
-
-                print('wheel rotate = ', _ctr, _wheel.angle)
-
                 self.wheels[_wheel].geometry.set_rotation(_wheel.angle)
+        
+        self.update_radius()

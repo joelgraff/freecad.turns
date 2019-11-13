@@ -78,6 +78,11 @@ class Vehicle(Body):
         self.center = None
         self.name = name
 
+        self.turn_axle = None
+        self.fixed_axle = None
+
+        self.radius_trackers = []
+
     def add_axle(self, displacement, length, is_fixed=True):
         """
         Add an axle.
@@ -86,13 +91,27 @@ class Vehicle(Body):
         displacement - distance along vehicle axis from center point
         """
 
+        #create the axle
         _axle = Vehicle.Axle(
             axis=self.axis, length=length,
             displacement=displacement, is_fixed=is_fixed)
 
+        #add it and it's displacement to their lists
         self.axles.append(_axle)
         self.axle_dists.append(displacement)
-        self.axle_distance = abs(max(self.axle_dists) - min(self.axle_dists))
+
+        #calculate the maximum axle distance
+        _max_dist = max(self.axle_dists)
+        _min_dist = min(self.axle_dists)
+
+        self.axle_distance = abs(_max_dist - _min_dist)
+
+        #reference the turning axle and the farthest-back fixed axle
+        if not is_fixed:
+            self.turn_axle = _axle
+
+        else:
+            self.fixed_axle = self.axles[self.axle_dists.index(_min_dist)]
 
     def update(self, angle):
         """

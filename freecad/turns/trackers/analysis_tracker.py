@@ -64,4 +64,4 @@ class AnalysisTracker(Base):
         Update the vehicle in the tracker
         """
 
-        self.trackers[vehicle.name].update(vehicle)
+        self.trackers[vehicle.name].update()
