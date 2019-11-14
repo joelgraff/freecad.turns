@@ -57,9 +57,10 @@ class BaseTask():
 
         self.panel = None
         self.ui = panel_filepath
-        self.widgets = []
+        self.widget_callbacks = []
+        self.widgets = types.SimpleNamespace()
 
-    def setup(self):
+    def setup_ui(self):
         """
         Initiailze the task window and controls.
         Override in inheriting class (optional)
@@ -69,24 +70,17 @@ class BaseTask():
         self.panel = \
             BaseTask.getMainWindow().findChild(QtGui.QWidget, 'TaskPanel')
 
-        if not self.widgets:
+        if not self.widget_callbacks:
             return
 
-        #build a dict keyed to the control name which stores a SimpleNameSpace
-        #object to store
-        self.panel.widgets = {}
+        #build the widget metadata object
+        self.widgets = types.SimpleNamespace()
 
-        for _v in self.widgets:
+        for _v in self.widget_callbacks:
 
-            self.panel.widgets[_v[0]] = types.SimpleNamespace(
-                reference=self.panel.findChild(QtGui.QWidget, _v[0]),
-                signal=_v[1],
-                callback=_v[2]
-            )
-
-        #connect the widget signals to the assicated callbacks
-        for _v in self.panel.widgets.values():
-            getattr(_v.reference, _v.signal).connect(_v.callback)
+            _ref = self.panel.findChild(QtGui.QWidget, _v[0])
+            getattr(_ref, _v[1]).connect(_v[2])
+            setattr(self.widgets, _v[0], _ref)
 
     def accept(self):
         """

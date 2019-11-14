@@ -25,6 +25,8 @@
 Example task template
 """
 
+from PySide.QtGui import QStyle
+
 import FreeCADGui as Gui
 
 from .. import resources
@@ -53,7 +55,8 @@ class TestVehicleTask(BaseTask):
 
         #list of tuples, associating the control name with the
         #signal and task callback
-        self.widgets = [
+        #define the widget signalling data
+        self.widget_callbacks = [
             ('back_button', 'clicked', self.step_back_cb),
             ('play_button', 'clicked', self.play_cb),
             ('forward_button', 'clicked', self.step_forward_cb)
@@ -67,6 +70,23 @@ class TestVehicleTask(BaseTask):
 
         self.tracker.insert_into_scenegraph(True)
 
+    def setup_ui(self):
+        """
+        Additional UI intialization code
+        """
+
+        super().setup_ui()
+
+        _play = self.widgets.play_button
+        _forward = self.widgets.forward_button
+        _back = self.widgets.back_button
+
+        _play.setIcon(_play.style().standardIcon(QStyle.SP_MediaPlay))
+        _forward.setIcon(
+            _forward.style().standardIcon(QStyle.SP_MediaSeekForward))
+
+        _back.setIcon(_back.style().standardIcon(QStyle.SP_MediaSeekBackward))
+
     def build_analyzer(self):
         """
         Create analyzer for vehicle
@@ -77,6 +97,7 @@ class TestVehicleTask(BaseTask):
         _v = Vehicle('car.1', (19.0, 7.0))
         _v.add_axle(6.5, 6.0, False)
         _v.add_axle(-4.5, 6.0)
+        _v.set_minimum_radius(24.0)
 
         _analyzer.vehicles.append(_v)
 
@@ -87,7 +108,7 @@ class TestVehicleTask(BaseTask):
         Step forward callback
         """
 
-        self.analyzer.step()
+        self.analyzer.step(True)
 
         for _v in self.analyzer.vehicles:
             self.tracker.update(_v)
@@ -97,17 +118,15 @@ class TestVehicleTask(BaseTask):
         Step backward callback
         """
 
+        self.analyzer.step()
+
+        for _v in self.analyzer.vehicles:
+            self.tracker.update(_v)
+
     def play_cb(self):
         """
         Play simulation callback
         """
-
-    def setup(self):
-        """
-        Override of base class method.  Optional
-        """
-
-        super().setup()
 
     def setp_back_cb(self):
         """

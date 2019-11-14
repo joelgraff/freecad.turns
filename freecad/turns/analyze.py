@@ -58,17 +58,20 @@ class Analyze(metaclass=Singleton):
         #position along path
         self.position = 0.0
 
-    def step(self):
+    def step(self, backward=False):
         """
         Step the analysis along the path
         """
 
-        angle = self.get_path_tangent()
+        _step = 0.1
+
+        if backward:
+            _step = -0.1
 
         for _v in self.vehicles:
+            if _v.update(self.position + _step):
+                self.position += _step
 
-            _v.update(angle)
-            print('step', angle, self.position, 'vehicle', _v.points)
 
     def get_path_tangent(self):
         """

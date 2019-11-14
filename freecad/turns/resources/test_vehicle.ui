@@ -55,21 +55,21 @@
             <item>
              <widget class="QPushButton" name="back_button">
               <property name="text">
-               <string>Back</string>
+               <string/>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QPushButton" name="play_button">
               <property name="text">
-               <string>Play</string>
+               <string/>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QPushButton" name="forward_button">
               <property name="text">
-               <string>Forward</string>
+               <string/>
               </property>
              </widget>
             </item>

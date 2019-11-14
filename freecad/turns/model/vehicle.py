@@ -75,6 +75,8 @@ class Vehicle(Body):
         self.axle_distance = 0.0
         self.delta = 0.0
         self.radius = 0.0
+        self.minimum_radius = 0.0
+        self.maximum_angle = 0.0
         self.center = None
         self.name = name
 
@@ -113,6 +115,22 @@ class Vehicle(Body):
         else:
             self.fixed_axle = self.axles[self.axle_dists.index(_min_dist)]
 
+    def set_minimum_radius(self, radius):
+        """
+        Set the minimum vehicle radius, updating the maximum steering angle
+        """
+
+        self.minimum_radius = radius
+        self.maximum_angle = math.atan(self.axle_distance / radius)
+
+    def set_maximum_angle(self, angle):
+        """
+        Set the maximum steering angle, updating the minimum radius
+        """
+
+        self.maximum_angle = angle
+        self.minimum_radius = self.axle_distance / math.tan(angle)
+
     def update(self, angle):
         """
         Update the vehicle position using the given steering angle (radians)
@@ -128,11 +146,14 @@ class Vehicle(Body):
         # the radius, offset by half the vehicle width.
         #
         # The arc direction is -cw / +ccw
-        _result = []
+
         _half_pi = math.pi / 2.0
 
+        if abs(angle) > self.maximum_angle:
+            return False
+
         self.axis.angle = angle
-        self.radius = self.axle_distance / math.atan(angle)
+        self.radius = self.axle_distance / math.tan(angle)
 
         print('axle_dist / angle', self.axle_distance, angle)
         #sign of angle to add / subtract from central steering angle.
@@ -168,8 +189,7 @@ class Vehicle(Body):
             _axle.wheels[0].angle = math.atan(_wheel_angles[0])
             _axle.wheels[1].angle = math.atan(_wheel_angles[1])
 
-        return _result
-
+        return True
 # INPUTS
 #
 # Lead vehicle:

@@ -63,7 +63,7 @@ class TestVehicleCommand():
 
         _task = TestVehicleTask()
         Gui.Control.showDialog(_task)
-        _task.setup()
+        _task.setup_ui()
 
 
     def IsActive(self):

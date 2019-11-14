@@ -137,17 +137,10 @@ class VehicleTracker(Base, Style, Geometry):
 
         _wheels = self.vehicle.turn_axle.wheels
 
-        print('wheels',_wheels)
-        print(self.vehicle.fixed_axle, self.vehicle.turn_axle)
-        print(self.vehicle.fixed_axle.center, self.vehicle.turn_axle.center)
-        print(self.vehicle.axles)
-
         _axle_centers = self.transform_points(
             [self.vehicle.fixed_axle.center, self.vehicle.turn_axle.center],
             self.geometry.coordinate
         )
-
-        print('axle centers',_axle_centers)
 
         _wheel_centers = [
             self.wheels[_wheels[0]].transform_points(
@@ -157,10 +150,8 @@ class VehicleTracker(Base, Style, Geometry):
                 [_wheels[1].center + (0.0,)], self.geometry.coordinate)[0]
         ]
 
-        print('wheel centers',_wheel_centers)
         _ortho = \
             TupleMath.scale(self.vehicle.axis.ortho(), self.vehicle.radius)
-
 
         _center = TupleMath.add(_ortho, _axle_centers[0]) + (0.0,)
 
@@ -169,8 +160,8 @@ class VehicleTracker(Base, Style, Geometry):
             _wheel_centers[0], _center, _wheel_centers[1]
         ]
 
-        print(_pts)
         self.radius_tracker.update(points=_pts, notify=False)
+
     def update(self):
         """
         Update the vehicle geometry
