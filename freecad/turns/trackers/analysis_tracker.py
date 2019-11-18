@@ -28,9 +28,13 @@ Analysis Tracker class
 import FreeCADGui as Gui
 
 from pivy_trackers.trait.base import Base
+from pivy_trackers.trait.event import Event
+
+from pivy_trackers.tracker.context_tracker import ContextTracker
+
 from .vehicle_tracker import VehicleTracker
 
-class AnalysisTracker(Base):
+class AnalysisTracker(ContextTracker):
     """
     Analysis Tracker class
     """
@@ -46,7 +50,6 @@ class AnalysisTracker(Base):
         )
 
         self.trackers = {}
-
         self.set_visibility()
 
     def add_vehicle(self, vehicle):

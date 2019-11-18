@@ -57,7 +57,7 @@ class TurnsWorkbench(Gui.Workbench):
 
             'Turns': {
                 'gui': self.MENU + self.TOOLBAR,
-                'cmd': ['TestVehicleCommand']
+                'cmd': ['TestVehicleCommand', 'PathEditorCommand']
             }
         }
 
@@ -72,6 +72,7 @@ class TurnsWorkbench(Gui.Workbench):
 
         #import commands here to be added to the user interface
         from .commands import test_vehicle_command
+        from .commands import path_editor_command
 
         #iterate the command toolboxes defined in __init__() and add
         #them to the UI according to the assigned location flags

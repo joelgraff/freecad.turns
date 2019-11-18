@@ -94,7 +94,31 @@ class TupleMath(Const):
         return TupleMath.scale(tpl, (1.0 / TupleMath.length(tpl)))
 
     @staticmethod
-    def ortho(tpl, is_ccw = True, x_index=0, y_index=1):
+    def dot(vec1, vec2):
+        """
+        Calculate the dot product of two tuples
+        """
+
+        _sum = 0.0
+
+        for _i, _v in enumerate(vec1):
+            _sum += _v + vec2[_i]
+
+        return _sum
+
+    @staticmethod
+    def bearing(vector):
+        """
+        Get the bearing of a vector in tuple form
+        """
+
+        _up = (0.0, 1.0)
+        _vec = TupleMath.unit(vector[0:2])
+
+        return math.acos(TupleMath.dot(_up, _vec))
+
+    @staticmethod
+    def ortho(tpl, is_ccw=True, x_index=0, y_index=1):
         """
         Calculate the orthogonal of x_index and y_index
         """

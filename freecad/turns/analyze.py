@@ -25,7 +25,6 @@ Swept Path Analysis
 """
 
 from .support.singleton import Singleton
-
 from .model.vehicle import Vehicle
 
 def test():
@@ -58,27 +57,26 @@ class Analyze(metaclass=Singleton):
         #position along path
         self.position = 0.0
 
-    def step(self, backward=False):
+    def set_path(self, path):
         """
-        Step the analysis along the path
+        Set the path (a list of tuple coordinates) for vehicles
         """
-
-        _step = 0.1
-
-        if backward:
-            _step = -0.1
 
         for _v in self.vehicles:
-            if _v.update(self.position + _step):
-                self.position += _step
+            _v.set_path(path)
 
-
-    def get_path_tangent(self):
+    def step(self):
         """
-        Calculate the tangent at the current position along the path
-        Angle measured ccw+ from x-axis
+        Step the animation of each vehicle
         """
 
-        self.position += 0.1
+        for _v in self.vehicles:
+            _v.step()
 
-        return self.position
+    def update(self, angles):
+        """
+        Update the vehicles with a list of angles
+        """
+
+        for _i, _v in self.vehicles:
+            _v.update(angles[_i])

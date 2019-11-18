@@ -109,5 +109,7 @@ class BaseTask():
         Gui.Control.closeDialog()
 
         #delete control referecnes
-        self.panel.widgets.clear()
+        self.ui = None
+        self.widget_callbacks.clear()
+        self.widgets = None
         self.panel = None

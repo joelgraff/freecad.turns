@@ -167,6 +167,8 @@ class VehicleTracker(Base, Style, Geometry):
         Update the vehicle geometry
         """
 
+        self.set_rotation(self.vehicle.orientation)
+
         for _axle in self.vehicle.axles:
 
             if _axle.is_fixed:
@@ -176,5 +178,5 @@ class VehicleTracker(Base, Style, Geometry):
 
                 _ctr = _wheel.center + (0.0,)
                 self.wheels[_wheel].geometry.set_rotation(_wheel.angle)
-        
+
         self.update_radius()

@@ -79,9 +79,12 @@ class Vehicle(Body):
         self.maximum_angle = 0.0
         self.center = None
         self.name = name
-
+        self.orientation = 0.0
         self.turn_axle = None
         self.fixed_axle = None
+
+        self.path = None
+        self.position = 0
 
         self.radius_trackers = []
 
@@ -131,6 +134,39 @@ class Vehicle(Body):
         self.maximum_angle = angle
         self.minimum_radius = self.axle_distance / math.tan(angle)
 
+    def set_path(self, path):
+        """
+        Set the vehicle path
+        """
+
+        self.path = path
+
+        self.orientation = \
+            TupleMath.bearing(TupleMath.subtract(path[1], path[0]))
+
+        self.position = 0
+
+    def step(self):
+        """
+        Step the vehicle forward along it's path
+        """
+
+        if self.position >= len(self.path) - 1:
+            return
+
+        self.orientation = \
+            TupleMath.bearing(TupleMath.subtract(
+                self.path[self.position + 1], self.path[self.position]))
+
+        if self.position < len(self.path) - 2:
+
+            _angle = TupleMath.bearing(TupleMath.subtract(
+                self.path[self.position + 2], self.path[self.position + 1]))
+
+            self.update(_angle)
+
+        self.position += 1
+
     def update(self, angle):
         """
         Update the vehicle position using the given steering angle (radians)
@@ -155,7 +191,6 @@ class Vehicle(Body):
         self.axis.angle = angle
         self.radius = self.axle_distance / math.tan(angle)
 
-        print('axle_dist / angle', self.axle_distance, angle)
         #sign of angle to add / subtract from central steering angle.
         #relative to ccw-oriented (left-hand) wheel
         _sign = 1.0 # math.copysign(1.0, angle)
@@ -178,13 +213,10 @@ class Vehicle(Body):
             #The wheel angle is the extra angle for each wheel
             #added to the central steering angle
 
-            print('\n\tradius = ', self.radius)
             _wheel_angles = (
                 _sign * self.axle_distance / (self.radius + _axle.length/2.0),
                 _sign * self.axle_distance / (self.radius - _axle.length/2.0)
             )
-
-            print('\n\twheel angles = ', [math.atan(_v) for _v in _wheel_angles])
 
             _axle.wheels[0].angle = math.atan(_wheel_angles[0])
             _axle.wheels[1].angle = math.atan(_wheel_angles[1])
