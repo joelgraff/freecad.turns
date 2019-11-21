@@ -91,7 +91,12 @@ class TupleMath(Const):
         Normalize a tuple / calculate the unit vector
         """
 
-        return TupleMath.scale(tpl, (1.0 / TupleMath.length(tpl)))
+        _length = TupleMath.length(tpl)
+
+        if not _length:
+            return tpl
+
+        return TupleMath.scale(tpl, (1.0 / _length))
 
     @staticmethod
     def dot(vec1, vec2):
@@ -102,20 +107,22 @@ class TupleMath(Const):
         _sum = 0.0
 
         for _i, _v in enumerate(vec1):
-            _sum += _v + vec2[_i]
+            _sum += _v * vec2[_i]
 
         return _sum
 
     @staticmethod
-    def bearing(vector):
+    def bearing(vector, up=(0.0, 1.0)):
         """
         Get the bearing of a vector in tuple form
         """
 
-        _up = (0.0, 1.0)
+        if up != (0.0, 1.0):
+            up = TupleMath.unit(up[0:2])
+
         _vec = TupleMath.unit(vector[0:2])
 
-        return math.acos(TupleMath.dot(_up, _vec))
+        return math.acos(TupleMath.dot(up, _vec))
 
     @staticmethod
     def ortho(tpl, is_ccw=True, x_index=0, y_index=1):
@@ -130,3 +137,53 @@ class TupleMath(Const):
             _x_sign, _y_sign = _y_sign, _x_sign
 
         return tuple(_x_sign * tpl[x_index], _y_sign * tpl[y_index])
+
+    @staticmethod
+    def manhattan(lhs, rhs):
+        """
+        Compute the manhattan distance between two tuples
+        Tuples of unequal length are padded with 0.0.
+        """
+
+        _distance = 0.0
+        _delta = len(rhs) - len(lhs)
+
+        #longer lhs
+        if _delta < 0:
+            rhs = rhs + (0.0,)*(abs(_delta))
+
+        #longer rhs
+        elif _delta > 0:
+            lhs = lhs + (0.0,)*(_delta)
+
+        for _i, _v in enumerate(lhs):
+            _distance += abs(rhs[_i] - _v)
+
+        return _distance
+
+    @staticmethod
+    def cross(src, dest):
+        """
+        Calculate the cross-product of two 3D vector tuples
+        """
+
+        return (
+            src[1]*dest[2] - src[2]*dest[1],
+            src[2]*dest[0] - src[0]*dest[2],
+            src[0]*dest[1] - src[1]*dest[0]
+        )
+
+    @staticmethod
+    def signed_bearing(src, dest):
+        """
+        Calculate the signed bearing between two vectors
+        """
+
+        _angle = TupleMath.bearing(src, dest)
+        _cross = TupleMath.cross(src, dest)
+        _dot = TupleMath.dot(_cross, (0.0, 0.0, 1.0))
+
+        if _dot < 0.0:
+            _angle *= -1.0
+
+        return _angle

@@ -25,16 +25,12 @@
 Vehicle Tracker class
 """
 
-import FreeCADGui as Gui
-
+from pivy_trackers.tracker.geometry_tracker import GeometryTracker
 from pivy_trackers.tracker.line_tracker import LineTracker
-from pivy_trackers.trait.base import Base
-from pivy_trackers.trait.geometry import Geometry
-from pivy_trackers.trait.style import Style
 
 from ..support.tuple_math import TupleMath
 
-class VehicleTracker(Base, Style, Geometry):
+class VehicleTracker(GeometryTracker):
     """
     Vehicle Tracker class
     """
@@ -60,7 +56,6 @@ class VehicleTracker(Base, Style, Geometry):
 
         self.set_visibility()
         self.name = name
-
 
     def build_radius_tracker(self):
         """
@@ -130,25 +125,20 @@ class VehicleTracker(Base, Style, Geometry):
 
         return super().transform_points(points, node)
 
-    def update_radius(self):
+    def refresh_radius(self):
         """
-        Update the radius tracker
+        Refresh the radius tracker
         """
 
         _wheels = self.vehicle.turn_axle.wheels
 
-        _axle_centers = self.transform_points(
-            [self.vehicle.fixed_axle.center, self.vehicle.turn_axle.center],
-            self.geometry.coordinate
-        )
+        _axle_centers = [
+            self.vehicle.fixed_axle.center + (0.0,),
+            self.vehicle.turn_axle.center + (0.0,)
+        ]
 
         _wheel_centers = [
-            self.wheels[_wheels[0]].transform_points(
-                [_wheels[0].center + (0.0,)], self.geometry.coordinate)[0],
-
-            self.wheels[_wheels[1]].transform_points(
-                [_wheels[1].center + (0.0,)], self.geometry.coordinate)[0]
-        ]
+            _wheels[0].center + (0.0,), _wheels[1].center + (0.0,)]
 
         _ortho = \
             TupleMath.scale(self.vehicle.axis.ortho(), self.vehicle.radius)
@@ -162,12 +152,19 @@ class VehicleTracker(Base, Style, Geometry):
 
         self.radius_tracker.update(points=_pts, notify=False)
 
-    def update(self):
+    def refresh(self):
         """
-        Update the vehicle geometry
+        Refresh the vehicle geometry based on the data model
         """
 
-        self.set_rotation(self.vehicle.orientation)
+        if not self.vehicle.path:
+            return
+
+        _pos = self.vehicle.path[self.vehicle.step][0]
+
+        print('vehicle position',_pos)
+        self.geometry.set_translation(_pos)
+        self.geometry.set_rotation(self.vehicle.orientation)
 
         for _axle in self.vehicle.axles:
 
@@ -179,4 +176,4 @@ class VehicleTracker(Base, Style, Geometry):
                 _ctr = _wheel.center + (0.0,)
                 self.wheels[_wheel].geometry.set_rotation(_wheel.angle)
 
-        self.update_radius()
+        self.refresh_radius()

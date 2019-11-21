@@ -44,6 +44,8 @@ class Vehicle(Body):
             Axle sublclass to manage wheels
             """
 
+            super().__init__()
+
             self.vector = axis.ortho()
             self.center = axis.project(displacement)
             self.set_length(length)
@@ -84,7 +86,8 @@ class Vehicle(Body):
         self.fixed_axle = None
 
         self.path = None
-        self.position = 0
+        self.step = 0
+        self.angle = 0.0
 
         self.radius_trackers = []
 
@@ -141,31 +144,38 @@ class Vehicle(Body):
 
         self.path = path
 
-        self.orientation = \
-            TupleMath.bearing(TupleMath.subtract(path[1], path[0]))
+        self.orientation = TupleMath.bearing(path[0][1], (1.0, 0.0))
+        self.step = 0
+        self.set_step(0, True)
 
-        self.position = 0
-
-    def step(self):
+    def set_step(self, step, force_refresh=False):
         """
-        Step the vehicle forward along it's path
+        Set the absolulte position of the vehicle along it's path
         """
 
-        if self.position >= len(self.path) - 1:
+        if not self.path:
             return
 
-        self.orientation = \
-            TupleMath.bearing(TupleMath.subtract(
-                self.path[self.position + 1], self.path[self.position]))
+        if step > len(self.path):
+            step = len(self.path)
 
-        if self.position < len(self.path) - 2:
+        if self.step == step and not force_refresh:
+            return
 
-            _angle = TupleMath.bearing(TupleMath.subtract(
-                self.path[self.position + 2], self.path[self.position + 1]))
+        self.orientation = TupleMath.bearing(self.path[step][1], (1.0, 0.0))
 
-            self.update(_angle)
+        if self.step < len(self.path) - 1:
 
-        self.position += 1
+            _angle = self.path[step][2]
+
+            print('steering angle = ', _angle, self.maximum_angle)
+
+            if _angle:
+                self.update(_angle)
+
+            print('radius = ', self.radius)
+
+        self.step = step
 
     def update(self, angle):
         """

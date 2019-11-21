@@ -24,21 +24,21 @@
 Swept Path Analysis
 """
 
-from .support.singleton import Singleton
-from .model.vehicle import Vehicle
+from ..support.singleton import Singleton
+from .vehicle import Vehicle
 
 def test():
 
-    a = Analyze()
+    _a = Analyzer()
 
     _v = Vehicle((8.0, 20.0), 1.0)
     _v.add_axle(0.0, 3.0)
     _v.add_axle(10.0, 3.0)
 
-    a.vehicles.append(_v)
-    a.step()
+    _a.vehicles.append(_v)
+    _a.step()
 
-class Analyze(metaclass=Singleton):
+class Analyzer(metaclass=Singleton):
     """
     Swept Path Analysis
     """
@@ -57,6 +57,9 @@ class Analyze(metaclass=Singleton):
         #position along path
         self.position = 0.0
 
+        #loop analysis
+        self.loop = False
+
     def set_path(self, path):
         """
         Set the path (a list of tuple coordinates) for vehicles
@@ -65,13 +68,45 @@ class Analyze(metaclass=Singleton):
         for _v in self.vehicles:
             _v.set_path(path)
 
-    def step(self):
+    def move_steps(self, steps):
         """
-        Step the animation of each vehicle
+        Move the analysis a number of steps from the current step
         """
 
         for _v in self.vehicles:
-            _v.step()
+
+            _next_step = _v.step + steps
+
+            if _next_step > len(_v.path) - 1:
+
+                if not self.loop:
+                    return
+
+                _next_step = 0
+
+            elif _next_step < 0:
+
+                if not self.loop:
+                    return
+
+                _next_step = len(_v.path) - 1
+
+            _v.set_step(_next_step)
+
+    def set_step(self, step):
+        """
+        Set the analysis at a specific step along the path
+        """
+
+        for _v in self.vehicles:
+            _v.set_step(step)
+
+    def step(self):
+        """
+        Step the animation of each vehicle one step forward
+        """
+
+        self.move_steps(1)
 
     def update(self, angles):
         """

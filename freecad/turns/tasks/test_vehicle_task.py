@@ -34,8 +34,6 @@ import FreeCADGui as Gui
 from .. import resources
 
 from ..commands.path_editor_command import PathEditorCommand
-from ..analyze import Analyze
-from ..model.vehicle import Vehicle
 from ..trackers.analysis_tracker import AnalysisTracker
 
 from .base_task import BaseTask
@@ -50,6 +48,7 @@ class TestVehicleTask(BaseTask):
         Constructor
         """
 
+        self.name = 'TestVheicleTask'
         #initialize the inherited base class
         super().__init__(resources.__path__[0] + '/test_vehicle.ui')
 
@@ -57,27 +56,25 @@ class TestVehicleTask(BaseTask):
         self.view = Gui.ActiveDocument.ActiveView
         self.path_editor = PathEditorCommand()
 
-        #list of tuples, associating the control name with the
-        #signal and task callback
-        #define the widget signalling data
+        # define the widget signalling data tuples as:
+        # (widget_name, widget_signal_name, callback)
         self.widget_callbacks = [
+            ('loop_checkbox', 'stateChanged', self.loop_checkbox_cb),
+            ('animation_speed_slider', 'valueChanged', self.speed_slider_cb),
             ('create_path_button', 'clicked', self.create_edit_path_cb),
             ('edit_path_button', 'clicked', self.create_edit_path_cb),
             ('path_combo', 'currentIndexChanged', self.path_cb),
             ('angle_edit', 'editingFinished', self.angle_cb),
             ('radius_edit', 'editingFinished', self.radius_cb),
-            ('steps_button', 'clicked', self.steps_cb),
+            ('max_steps_edit', 'editingFinished', self.max_steps_cb),
+            ('cur_step_edit', 'editingFinished', self.cur_step_cb),
             ('back_button', 'clicked', self.step_back_cb),
             ('play_button', 'clicked', self.play_cb),
             ('forward_button', 'clicked', self.step_forward_cb)
         ]
 
-        self.analyzer = self.build_analyzer()
+        self.is_playing = False
         self.tracker = AnalysisTracker()
-
-        for _i, _v in enumerate(self.analyzer.vehicles):
-            self.tracker.add_vehicle(_v)
-
         self.tracker.insert_into_scenegraph()
 
     def setup_ui(self):
@@ -111,21 +108,24 @@ class TestVehicleTask(BaseTask):
             _idx = self.widgets.path_combo.findText(_sel[0].Name)
             self.widgets.path_combo.setCurrentIndex(_idx)
 
-    def build_analyzer(self):
+        self.widgets.max_steps_edit.setInputMask("999")
+        self.widgets.cur_step_edit.setInputMask("999")
+
+        print(self.widgets.cur_step_edit.text())
+        self.tracker.set_step(
+            int(self.widgets.cur_step_edit.text())
+        )
+
+        self.max_steps_cb(100)
+        self.path_cb(0)
+        self.speed_slider_cb(3)
+
+    def loop_checkbox_cb(self, value):
         """
-        Create analyzer for vehicle
+        Callback for loop checkbox state
         """
 
-        _analyzer = Analyze()
-
-        _v = Vehicle('car.1', (19.0, 7.0))
-        _v.add_axle(6.5, 6.0, False)
-        _v.add_axle(-4.5, 6.0)
-        _v.set_minimum_radius(24.0)
-
-        _analyzer.vehicles.append(_v)
-
-        return _analyzer
+        self.tracker.set_animation_loop(self.widgets.loop_checkbox.isChecked())
 
     def create_edit_path_cb(self):
         """
@@ -134,77 +134,100 @@ class TestVehicleTask(BaseTask):
 
         self.path_editor.Activated()
 
+    def speed_slider_cb(self, value):
+        """
+        Callback for changes to the animation slider position
+        """
+
+        if not value:
+            value = 1
+
+        else:
+            value *= 5
+
+        self.tracker.set_animation_speed(value)
+
     def path_cb(self, value):
         """
         Callback for path combobox (currentIndexChanged)
         """
 
         _name = self.widgets.path_combo.currentText()
+
+        if not _name:
+            return
+
         Gui.Selection.clearSelection()
+
         _sketch = App.ActiveDocument.getObject(_name)
+
+        if not _sketch:
+            return
 
         Gui.Selection.addSelection(_sketch)
 
-        _path = self.discretize_path(
-            _sketch.Geometry, self.widgets.steps_spin_box_value())
-
-        self.analyzer.set_path(_path)
+        self.tracker.set_path(_sketch.Geometry)
 
     def angle_cb(self):
         """
-        Callback for vehicle length line edit (editingFinished)
+        Callback for vehicle max steering angle line edit
         """
 
         print('angle_cb')
 
     def radius_cb(self):
         """
-        Callback for vehicle length line edit (editingFinished)
+        Callback for vehicle min turning radius line edit
         """
 
         print('radius_cb')
 
-    def steps_cb(self, value):
+    def max_steps_cb(self, value):
         """
-        Callback for vehicle length line edit (clicked)
+        Callback for maximum steps line edit
         """
 
-        print('steps_cb')
+        self.tracker.set_max_steps(int(value))
+
+    def cur_step_cb(self, value):
+        """
+        Callback for current step line edit
+        """
+
+        self.tracker.set_step(int(value))
 
     def step_forward_cb(self):
         """
         Step forward callback
         """
 
-        self.analyzer.step(True)
-
-        for _v in self.analyzer.vehicles:
-            self.tracker.update(_v)
+        self.tracker.move_step(1)
 
     def step_back_cb(self):
         """
         Step backward callback
         """
 
-        self.analyzer.step()
-
-        for _v in self.analyzer.vehicles:
-            self.tracker.update(_v)
+        self.tracker.move_step(-1)
 
     def play_cb(self):
         """
         Play simulation callback
         """
 
-    def setp_back_cb(self):
-        """
-        Callback to step the simulation back
-        """
+        _icon = QStyle.SP_MediaPlay
 
-    def delete_object_callback(self):
-        """
-        Callback to step the simulation forward
-        """
+        if self.is_playing:
+            self.tracker.stop_animation()
+
+        else:
+            self.tracker.start_animation()
+            _icon = QStyle.SP_MediaStop
+
+        self.is_playing = not self.is_playing
+
+        _play = self.widgets.play_button
+        _play.setIcon(_play.style().standardIcon(_icon))
 
     def accept(self):
         """
@@ -219,22 +242,3 @@ class TestVehicleTask(BaseTask):
         """
 
         super().reject()
-
-    def discretize_path(self, path, steps):
-        """
-        Discretize geometry into a series of points
-        """
-
-        _path = []
-
-        for _edge in path:
-
-            if _edge.isDerivedFrom('Part::GeomArcOfCircle') \
-                or _edge.isDerivedFrom('Part::GeomCircle'):
-
-                _path += [tuple(_v) for _v in _edge.discretize(steps)]
-
-            elif _edge.isDerivedFrom('Part::GeomLineSegment'):
-                _path += [tuple(_v) for _v in [_edge.StartPoint,_edge.EndPoint]]
-
-        return _path
