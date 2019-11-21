@@ -24,16 +24,17 @@ GUI Initialization module
 """
 
 import os
+
 import FreeCADGui as Gui
-import FreeCAD as App
-from freecad.workbench_starterkit import ICONPATH
+
+from freecad.turns import ICONPATH
 
 #use this to track workbench versioning
-TEMPLATEWB_VERSION = '(alpha)'
+TURNS_WB_VERSION = '(alpha)'
 
-class template_workbench(Gui.Workbench):
+class TurnsWorkbench(Gui.Workbench):
     """
-    class which gets initiated at starup of the gui
+    class which gets initiated at startup of the gui
     """
 
     #Constants for UI locations for toolboxes
@@ -42,8 +43,8 @@ class template_workbench(Gui.Workbench):
     CONTEXT = 4
 
     #Workbench GUI-specific attributes
-    MenuText = "Template Workbench" + TEMPLATEWB_VERSION
-    ToolTip = "An example template workbench"
+    MenuText = "Turns Workbench" + TURNS_WB_VERSION
+    ToolTip = "FreeCAD Truns Swept Path Analysis Workbench"
     Icon = os.path.join(ICONPATH, "template_resource.svg")
     toolbox = []
 
@@ -54,20 +55,10 @@ class template_workbench(Gui.Workbench):
 
         self.command_ui = {
 
-            'StarterKit': {
-                'gui': self.MENU,
-                'cmd': ['MyCommand1', 'MyCommand2', 'MyCommand3']
-            },
-
-            'Files': {
-                'gui': self.TOOLBAR,
-                'cmd': ['MyCommand2']
-            },
-
-            'Geometry': {
-                'gui': self.TOOLBAR + self.CONTEXT,
-                'cmd': ['MyCommand1', 'MyCommand3']
-            },
+            'Turns': {
+                'gui': self.MENU + self.TOOLBAR,
+                'cmd': ['TestVehicleCommand', 'PathEditorCommand']
+            }
         }
 
     def GetClassName(self):
@@ -80,9 +71,8 @@ class template_workbench(Gui.Workbench):
         """
 
         #import commands here to be added to the user interface
-        from freecad.workbench_starterkit import my_numpy_function
-
-        from .commands import my_command_1, my_command_2, my_command_3
+        from .commands import test_vehicle_command
+        from .commands import path_editor_command
 
         #iterate the command toolboxes defined in __init__() and add
         #them to the UI according to the assigned location flags
@@ -119,4 +109,4 @@ class template_workbench(Gui.Workbench):
             if _v['gui'] & self.CONTEXT:
                 self.appendContextMenu(_k, _v['cmd'])
 
-Gui.addWorkbench(template_workbench())
+Gui.addWorkbench(TurnsWorkbench())

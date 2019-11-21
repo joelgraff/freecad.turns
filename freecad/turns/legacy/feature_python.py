@@ -36,21 +36,21 @@ class ViewProvider:
     def setupContextMenu(self, obj, menu):
         menu.clear()
         action = menu.addAction("simulate track")
-        action.triggered.connect(lambda:self.methodA(obj.Object))
+        action.triggered.connect(lambda: self.methodA(obj.Object))
         action = menu.addAction("MyMethod #2")
         menu.addSeparator()
-        action.triggered.connect(lambda:self.methodB(obj.Object))
+        action.triggered.connect(lambda: self.methodB(obj.Object))
         action = menu.addAction("Edit Sketch")
-        action.triggered.connect(lambda:self.myedit(obj.Object))
+        action.triggered.connect(lambda: self.myedit(obj.Object))
 
 
-    def myedit(self,obj):
+    def myedit(self, obj):
         self.methodB(None)
         Gui.activeDocument().setEdit(obj.Name)
         self.methodA(None)
 
-    def methodA(self,obj):
-        print ("Method A",obj.Label)
+    def methodA(self, obj):
+        print ("Method A", obj.Label)
         ss=2
         if not obj.trailerOn:
             anz=int(round(obj.path.Shape.Length/10))
@@ -96,4 +96,4 @@ class ViewProvider:
     def doubleClicked(self,vobj):
         print ("double clicked")
         self.myedit(vobj.Object)
-        print ("Ende double clicked")
+        print ("End double clicked")

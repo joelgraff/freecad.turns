@@ -28,9 +28,11 @@ import os
 import FreeCAD as App
 import FreeCADGui as Gui
 
-from freecad.workbench_starterkit import ICONPATH
+from freecad.turns import ICONPATH
 
-class MyCommand1():
+from ..tasks.test_vehicle_task import TestVehicleTask
+
+class TestVehicleCommand():
     """
     Example Command
     """
@@ -43,8 +45,8 @@ class MyCommand1():
     resources = {
         'Pixmap'  : os.path.join(ICONPATH, "template_resource.svg"),
         'Accel'   : "Shift+1",
-        'MenuText': "MyCommand1",
-        'ToolTip' : "Test command #1 for Workbench Starter Kit",
+        'MenuText': "TestVehicle",
+        'ToolTip' : "Test Vehicle Command",
         'CmdType' : "ForEdit"
     }
 
@@ -59,12 +61,10 @@ class MyCommand1():
         Activation callback
         """
 
-        print('\n\tRunning My Command 1...')
+        _task = TestVehicleTask()
+        Gui.Control.showDialog(_task)
+        _task.setup_ui()
 
-        App.ActiveDocument.addObject('Part::Box', 'Starter_Box')
-        App.ActiveDocument.ActiveObject.Label = 'Starter kit box'
-        App.ActiveDocument.recompute()
-        Gui.SendMsgToActiveView('ViewFit')
 
     def IsActive(self):
         """
@@ -80,4 +80,4 @@ class MyCommand1():
 
         return App.ActiveDocument is not None
 
-Gui.addCommand('MyCommand1', MyCommand1())
+Gui.addCommand('TestVehicleCommand', TestVehicleCommand())

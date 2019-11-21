@@ -21,65 +21,75 @@
 #*                                                                     *
 #***********************************************************************
 """
-Swept Path Analysis
+Axis model object
 """
 
-from .support.singleton import Singleton
+from ..support.tuple_math import TupleMath
 
-from .model.vehicle import Vehicle
-
-def test_analyze():
-
-    a = Analyze()
-
-    _v = Vehicle((8.0, 20.0), 1.0)
-    _v.add_axle(0.0, 3.0)
-    _v.add_axle(10.0, 3.0)
-
-    a.vehicles.append(_v)
-    a.step()
-
-class Analyze(metaclass=Singleton):
+class Axis():
     """
-    Swept Path Analysis
+    Axis model object
     """
 
-    def __init__(self):
+    def __init__(self, vector=None, length=1.0, center=None):
         """
         Constructor
+        center_point - 2D coordinate tuple
+        axis - 2D vector tuple
         """
 
-        #list of vehicles to analyze
-        self.vehicles = []
+        self.center = center
+        self.end_points = ()
+        self.vector = ()
+        self.length = length
+        self.set_vector(vector)
 
-        #list of tuples for path cooridnates
-        self.path = []
-
-        #position along path
-        self.position = 0.0
-
-    def step(self):
+    def project(self, displacement):
         """
-        Step the analysis along the path
+        Project the point along the axis vector from the center
+        displacement - distance from center
         """
 
-        angle = self.get_path_tangent()
+        return TupleMath.add(
+            self.center, TupleMath.scale(self.vector, displacement)
+        )
 
-        for _v in self.vehicles:
-
-            _v.update(angle)
-            print('step', self.position, 'vehicle', _v.points)
-
-            for _a in _v.axles:
-                _a.update()
-                print(_a.wheels)
-
-    def get_path_tangent(self):
+    def set_vector(self, vector):
         """
-        Calculate the tangent at the current position along the path
-        Angle measured ccw+ from x-axis
+        Set the vector of the axis, converting it to unit length
+        Also calculates axis end points
         """
 
-        self.position += 0.1
+        if vector:
+            vector = TupleMath.unit(vector)
 
-        return self.position
+        self.vector = vector
+
+        if not self.vector:
+            return
+
+    def set_length(self, length):
+        """
+        Set the axis length and update the axis end points
+        """
+
+        self.length = length
+
+        _half_vector = TupleMath.scale(self.vector, self.length/2.0)
+
+        self.end_points = (
+            TupleMath.subtract(self.center, _half_vector),
+            TupleMath.add(self.center, _half_vector)
+        )
+
+    def ortho(self, is_ccw=True):
+        """
+        Calculate the orthogonal, cw or ccw from direction of axis
+        """
+
+        _signs = (-1.0, 1.0)
+
+        if not is_ccw:
+            _signs = (1.0, -1.0)
+
+        return(_signs[0] * self.vector[1], _signs[1] * self.vector[0])

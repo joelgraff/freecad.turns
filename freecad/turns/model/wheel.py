@@ -21,62 +21,35 @@
 #*                                                                     *
 #***********************************************************************
 """
-Axle model object
+Wheel model object
 """
 
-import math
+from .body import Body
+from ..support.tuple_math import TupleMath
 
-import numpy as np
+class Wheel(Body):
+    """
+    Wheel model object
+    """
 
-class Axle():
-
-    def __init__(self, axis, position, offset):
+    def __init__(self, center, width=0.8333, diameter=1.75):
         """
         Constructor
-
-        axis - unit length vector as numpy array of 2 floats
-        position - float
-        offset  - float
         """
 
-        #axis along which axle is positioned,
-        #directed from front to rear
-        self.vehicle_axis = axis
+        self.width = width
+        self.diameter = diameter
+        self.angle = 0.0
+        self.center = center
 
-        #displacement along vehicle axial vector from pivot point
-        self.position = position
+        _top_left = TupleMath.add(center, (-diameter / 2.0, width / 2.0))
 
-        #center wheel position
-        self.center = self.vehicle_axis * self.position
+        self.points = [
+            _top_left,
+            TupleMath.add(_top_left, (diameter, 0.0)),
+            TupleMath.add(_top_left, (diameter, -width)),
+            TupleMath.add(_top_left, (0.0, -width)),
+            _top_left
+        ]
 
-        #offset of outermost wheel from axle center (equidistant)
-        self.offset = offset
-
-        #turning angle in radians of center wheel w.r.t axis, ccw+
-        self.angle = math.pi
-
-        #vector pointing along left side of axle
-        self.vector = None
-
-        #define initial wheel positions
-        self.update(self.angle)
-
-    def update(self, angle):
-        """
-        Return a list of tuples of the axle wheel coordinates.
-        At minimum this is [(left), (center), (right)]
-        """
-
-        _cos = math.cos(angle)
-        _sin = math.sin(angle)
-
-        #rotate the axle bhy the given angle
-        self.vector = np.array([self.vehicle_axis[1], -self.vehicle_axis[0]])
-        self.vector *= np.array([[_cos, -_sin],[_sin, _cos]])
-
-        #calcualte the new wheel positions
-        self.wheels = np.array([
-            self.center  + (self.vector * self.offset),
-            self.center,
-            self.center + (self.vector * self.offset * -1)
-        ])
+        super().__init__(self.points)

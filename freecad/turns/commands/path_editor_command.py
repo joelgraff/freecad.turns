@@ -21,32 +21,27 @@
 #*                                                                     *
 #***********************************************************************
 """
-Example Command
+DrawPath Command
 """
 import os
+
+from PySide import QtGui
 
 import FreeCAD as App
 import FreeCADGui as Gui
 
-from PySide import QtGui
+from freecad.turns import ICONPATH
 
-from freecad.workbench_starterkit import ICONPATH
-
-class MyCommand2():
+class PathEditorCommand():
     """
-    Example Command
+    PathEditor Command - launches sketcher to create a new path.
     """
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # Resource definition allows customization of the command icon,
-    # hotkey, text, tooltip and whether or not the command is active
-    # when a task panel is open
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     resources = {
         'Pixmap'  : os.path.join(ICONPATH, "template_resource.svg"),
-        'Accel'   : "Shift+2",
-        'MenuText': "MyCommand2",
-        'ToolTip' : "Test command #2 for Workbench Starter Kit",
+        'Accel'   : "Shift+1",
+        'MenuText': "Create / Edit Path",
+        'ToolTip' : "Create / Edit Path Command",
         'CmdType' : "ForEdit"
     }
 
@@ -58,15 +53,37 @@ class MyCommand2():
 
     def Activated(self):
         """
-        Activation callback
+        Activation callback - create / edit a sketch
         """
 
-        #_mw = self.getMainWindow()
+        _sel = Gui.Selection.getSelection()
 
-        #self.form = _mw.findChild(QtGui.QWidget, 'TaskPanel')
+        #edit an existing sketch, if selected
+        if _sel:
 
-        print('\n\tRuning My Command 2...')
-        print('\n\tUser chose file: ' + self.choose_file())
+            if _sel[0].isDerivedFrom('Sketcher::SketchObject'):
+
+                if Gui.Control.activeDialog():
+                    Gui.Control.closeDialog()
+
+                Gui.runCommand('Sketcher_EditSketch')
+                return
+
+            Gui.Selection.clearSelection()
+
+        #otherwise, create a new sketch
+        _path = QtGui.QInputDialog.getText(
+            None, 'Create New Path', 'Path name:')[0]
+
+        if not _path:
+            return
+
+        if Gui.Control.activeDialog():
+            Gui.Control.closeDialog()
+
+        App.ActiveDocument.addObject('Sketcher::SketchObject', _path)
+        Gui.ActiveDocument.setEdit(_path)
+        App.ActiveDocument.recompute()
 
     def IsActive(self):
         """
@@ -82,30 +99,4 @@ class MyCommand2():
 
         return App.ActiveDocument is not None
 
-    def getMainWindow(self):
-        """
-        Return reference to main window
-        """
-        top = QtGui.QApplication.topLevelWidgets()
-
-        for item in top:
-            if item.metaObject().className() == 'Gui::MainWindow':
-                return item
-
-        raise RuntimeError('No main window found')
-
-    def choose_file(self):
-        """
-        Open the file picker dialog and open the file
-        that the user chooses
-        """
-
-        open_path = ICONPATH
-
-        file_name = QtGui.QFileDialog.getOpenFileName(
-            None, 'Select File', open_path
-        )
-
-        return file_name[0]
-
-Gui.addCommand('MyCommand2', MyCommand2())
+Gui.addCommand('PathEditorCommand', PathEditorCommand())
