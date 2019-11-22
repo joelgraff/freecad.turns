@@ -76,22 +76,26 @@ class Analyzer(metaclass=Singleton):
         for _v in self.vehicles:
 
             _next_step = _v.step + steps
+            _end = len(_v.path) - 1
 
-            if _next_step > len(_v.path) - 1:
+            if _next_step > _end:
 
-                if not self.loop:
-                    return
+                if self.loop:
+                    _next_step = 0
 
-                _next_step = 0
+                else:
+                    _next_step = _end
 
             elif _next_step < 0:
 
-                if not self.loop:
-                    return
+                if self.loop:
+                    _next_step = _end
 
-                _next_step = len(_v.path) - 1
+                else:
+                    _next_step = 0
 
-            _v.set_step(_next_step)
+            if _next_step != _v.step:
+                _v.set_step(_next_step)
 
     def set_step(self, step):
         """

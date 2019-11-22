@@ -132,6 +132,12 @@ class AnalysisTracker(ContextTracker, Timer):
         Animation callback
         """
 
+        for _v in self.analyzer.vehicles:
+
+            if _v.at_path_end() and not self.analyzer.loop:
+                self.stop_animation()
+                return
+
         self.analyzer.step()
         self.refresh()
 
@@ -150,8 +156,9 @@ class AnalysisTracker(ContextTracker, Timer):
 
         _points = self.discretize_part_geometry(path_geometry)
         self.flipped_reversed_edges(_points)
+        pts = self.combine_points(_points)
 
-        return self.combine_points(_points)
+        return self.build_path_data(pts)
 
     def discretize_part_geometry(self, part_geometry):
         """
@@ -238,25 +245,33 @@ class AnalysisTracker(ContextTracker, Timer):
 
             _points += _p
 
+        return _points
+
+    def build_path_data(self, points):
+        """
+        Build the path data set, pre-calculating key values
+        """
+
         ###
         #build final path data set
         ###
-        _pos = _points[0]
-        _prev = TupleMath.unit(TupleMath.subtract(_points[1], _points[0]))
+
+        _pos = points[0]
+        _prev = TupleMath.unit(TupleMath.subtract(points[1], points[0]))
         _path = []
 
-        for _i in range(1, len(_points) - 2):
+        for _i in range(1, len(points) - 2):
 
             #calculate look-ahead vector, and angle beteen vectors
-            _next = TupleMath.subtract(_points[_i + 1], _points[_i])
+            _next = TupleMath.subtract(points[_i + 1], points[_i])
             _next = TupleMath.unit(_next)
 
-            _angle = TupleMath.signed_bearing(_next, _prev)
+            _angle = -TupleMath.signed_bearing(_next, _prev)
 
             #add to path and update state
             _path.append((_pos, _prev, _angle))
             _prev = _next
-            _pos = _points[_i]
+            _pos = points[_i]
 
         #add end-of-path tuples
         _path.append((_pos, _prev, 0.0))
@@ -290,6 +305,6 @@ class AnalysisTracker(ContextTracker, Timer):
         """
 
         _path = self.discretize_path(path_geometry)
-        print(_path)
+
         self.analyzer.set_path(_path)
         self.refresh()

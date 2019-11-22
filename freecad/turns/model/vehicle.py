@@ -143,8 +143,6 @@ class Vehicle(Body):
         """
 
         self.path = path
-
-        self.orientation = TupleMath.bearing(path[0][1], (1.0, 0.0))
         self.step = 0
         self.set_step(0, True)
 
@@ -156,13 +154,14 @@ class Vehicle(Body):
         if not self.path:
             return
 
-        if step > len(self.path):
-            step = len(self.path)
+        if step > len(self.path) - 1:
+            step = len(self.path) - 1
 
         if self.step == step and not force_refresh:
             return
 
-        self.orientation = TupleMath.bearing(self.path[step][1], (1.0, 0.0))
+        self.orientation = \
+            -TupleMath.signed_bearing(self.path[step][1], (1.0, 0.0, 0.0))
 
         if self.step < len(self.path) - 1:
 
@@ -176,6 +175,13 @@ class Vehicle(Body):
             print('radius = ', self.radius)
 
         self.step = step
+
+    def at_path_end(self):
+        """
+        True if the vehicle step position is at end of the path
+        """
+
+        return self.step >= len(self.path) - 1
 
     def update(self, angle):
         """
@@ -236,7 +242,7 @@ class Vehicle(Body):
 #
 # Lead vehicle:
 # 1. Geometric description of the vehicle outer boundarieas
-# 2. Wheel positions along axles 
+# 2. Wheel positions along axles
 # 3. Distance between fixed and turning axles (d)
 # 4. Angle of lead turning axle (a_l)
 #
