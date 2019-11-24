@@ -26,7 +26,7 @@ Vehicle model object
 
 import math
 
-from ..support.tuple_math import TupleMath
+from pivy_trackers.support.tuple_math import TupleMath
 
 from .axis import Axis
 from .body import Body

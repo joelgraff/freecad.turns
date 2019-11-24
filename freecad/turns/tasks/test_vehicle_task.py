@@ -241,4 +241,5 @@ class TestVehicleTask(BaseTask):
         Overrides base implementation (optional)
         """
 
+        self.tracker.finish()
         super().reject()
