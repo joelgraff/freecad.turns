@@ -93,3 +93,10 @@ class Axis():
             _signs = (1.0, -1.0)
 
         return(_signs[0] * self.vector[1], _signs[1] * self.vector[0])
+
+    def finish(self):
+        """
+        Cleanup
+        """
+
+        pass

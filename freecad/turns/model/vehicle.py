@@ -89,8 +89,6 @@ class Vehicle(Body):
         self.step = 0
         self.angle = 0.0
 
-        self.radius_trackers = []
-
     def add_axle(self, displacement, length, is_fixed=True):
         """
         Add an axle.
@@ -238,6 +236,17 @@ class Vehicle(Body):
             _axle.wheels[1].angle = math.atan(_wheel_angles[1])
 
         return True
+
+    def finish(self):
+        """
+        Cleanup
+        """
+
+        for _a in self.axles:
+            _a.finish()
+
+        super().finish()
+
 # INPUTS
 #
 # Lead vehicle:

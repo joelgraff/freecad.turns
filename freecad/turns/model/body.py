@@ -116,3 +116,13 @@ class Body():
         _b = _y_bar - _m * _x_bar
 
         return lambda _x: _m*_x + _b
+
+    def finish(self):
+        """
+        Cleanup
+        """
+
+        if self.axis:
+            self.axis.finish()
+
+        self.points = None

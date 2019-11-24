@@ -308,3 +308,16 @@ class AnalysisTracker(ContextTracker, Timer):
 
         self.analyzer.set_path(_path)
         self.refresh()
+
+    def finish(self):
+        """
+        Cleanup
+        """
+
+        if self.analyzer:
+            self.analyzer.finish()
+
+        for _t in self. trackers.values():
+            _t.finish()
+
+        super().finish()
