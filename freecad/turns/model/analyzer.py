@@ -119,3 +119,11 @@ class Analyzer(metaclass=Singleton):
 
         for _i, _v in self.vehicles:
             _v.update(angles[_i])
+
+    def finish(self):
+        """
+        Cleanup
+        """
+
+        self.vehicles = []
+        self.paths = []

@@ -31,6 +31,7 @@ from Part import BSplineCurve
 
 from pivy_trackers.trait.timer import Timer
 from pivy_trackers.tracker.context_tracker import ContextTracker
+from ..trackers.envelope_tracker import EnvelopeTracker
 
 from ..model.analyzer import Analyzer
 from ..model.vehicle import Vehicle
@@ -55,13 +56,14 @@ class AnalysisTracker(ContextTracker, Timer):
         )
 
         self.steps = 100
-        self.trackers = {}
+        self.vehicles = {}
+        self.envelopes = {}
 
         #create analysis model / engine
         self.analyzer = self.build_analyzer()
 
         #add vehicle trackers
-        for _i, _v in enumerate(self.analyzer.vehicles):
+        for _v in self.analyzer.vehicles:
             self.add_vehicle(_v)
 
         self.set_visibility()
@@ -97,10 +99,15 @@ class AnalysisTracker(ContextTracker, Timer):
         Add a vehicle tracker as described by the Vehicle model object
         """
 
-        _idx = str(len(self.trackers))
+        _idx = str(len(self.vehicles))
 
-        self.trackers[vehicle.name] =\
-            VehicleTracker(name=vehicle.name, data=vehicle, parent=self.base)
+        _v = VehicleTracker(name=vehicle.name, data=vehicle, parent=self.base)
+        self.vehicles[vehicle.name] = _v
+
+        self.envelopes[vehicle.name] =\
+            EnvelopeTracker(name=vehicle.name, data=vehicle, parent=self.base)
+
+        self.envelopes[vehicle.name].transform_node = _v.geometry.coordinate
 
     def start_animation(self):
         """
@@ -146,8 +153,10 @@ class AnalysisTracker(ContextTracker, Timer):
         Refresh the vehicles in the tracker based on state changes
         """
 
-        for _v in self.trackers.values():
+        for _i, _v  in self.vehicles.items():
+            print('refreshing...')
             _v.refresh()
+            self.envelopes[_i].refresh()
 
     def discretize_path(self, path_geometry):
         """
@@ -317,7 +326,10 @@ class AnalysisTracker(ContextTracker, Timer):
         if self.analyzer:
             self.analyzer.finish()
 
-        for _t in self. trackers.values():
-            _t.finish()
+        for _v in self.vehicles.values():
+            _v.finish()
+
+        for _e in self.envelopes.values():
+            _e.finish()
 
         super().finish()

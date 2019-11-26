@@ -162,7 +162,6 @@ class VehicleTracker(GeometryTracker):
 
         _pos = self.vehicle.path[self.vehicle.step][0]
 
-        print('vehicle position',_pos)
         self.geometry.set_translation(_pos)
         self.geometry.set_rotation(self.vehicle.orientation)
 
@@ -177,3 +176,17 @@ class VehicleTracker(GeometryTracker):
                 self.wheels[_wheel].geometry.set_rotation(_wheel.angle)
 
         self.refresh_radius()
+
+    def finish(self):
+        """
+        Cleanup
+        """
+
+        self.body = None
+        self.axis = None
+        self.axles = []
+        self.wheels = {}
+
+        if self.radius_tracker:
+            self.radius_tracker.finish()
+            self.radius_tracker = []

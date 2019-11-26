@@ -74,8 +74,9 @@ class TestVehicleTask(BaseTask):
         ]
 
         self.is_playing = False
+        print ('create analysis tracker')
         self.tracker = AnalysisTracker()
-        self.tracker.insert_into_scenegraph()
+        self.tracker.insert_into_scenegraph(True)
 
     def setup_ui(self):
         """
@@ -242,4 +243,6 @@ class TestVehicleTask(BaseTask):
         """
 
         self.tracker.finish()
+        self.tracker = None
+
         super().reject()
