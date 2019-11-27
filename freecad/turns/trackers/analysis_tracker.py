@@ -82,6 +82,8 @@ class AnalysisTracker(ContextTracker, Timer):
 
         _analyzer.vehicles.append(_v)
 
+        _analyzer.set_step(0, True)
+
         return _analyzer
 
     def on_insert(self):
@@ -93,6 +95,7 @@ class AnalysisTracker(ContextTracker, Timer):
         self.add_timer(
             interval=1.0, data=None, callback=self.animate,
             timer_id='analysis_animator', start=False)
+
 
     def add_vehicle(self, vehicle):
         """
@@ -154,7 +157,6 @@ class AnalysisTracker(ContextTracker, Timer):
         """
 
         for _i, _v  in self.vehicles.items():
-            print('refreshing...')
             _v.refresh()
             self.envelopes[_i].refresh()
 
@@ -316,7 +318,9 @@ class AnalysisTracker(ContextTracker, Timer):
         _path = self.discretize_path(path_geometry)
 
         self.analyzer.set_path(_path)
-        self.refresh()
+
+        for _e in self.envelopes.values():
+            _e.reset()
 
     def finish(self):
         """

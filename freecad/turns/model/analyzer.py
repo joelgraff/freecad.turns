@@ -60,6 +60,8 @@ class Analyzer(metaclass=Singleton):
         #loop analysis
         self.loop = False
 
+        self.set_step(0, True)
+
     def set_path(self, path):
         """
         Set the path (a list of tuple coordinates) for vehicles
@@ -97,13 +99,13 @@ class Analyzer(metaclass=Singleton):
             if _next_step != _v.step:
                 _v.set_step(_next_step)
 
-    def set_step(self, step):
+    def set_step(self, step, refresh=False):
         """
         Set the analysis at a specific step along the path
         """
 
         for _v in self.vehicles:
-            _v.set_step(step)
+            _v.set_step(step, refresh)
 
     def step(self):
         """
@@ -126,4 +128,4 @@ class Analyzer(metaclass=Singleton):
         """
 
         self.vehicles = []
-        self.paths = []
+        self.path = []

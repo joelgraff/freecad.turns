@@ -165,12 +165,8 @@ class Vehicle(Body):
 
             _angle = self.path[step][2]
 
-            print('steering angle = ', _angle, self.maximum_angle)
-
             if _angle:
                 self.update(_angle)
-
-            print('radius = ', self.radius)
 
         self.step = step
 

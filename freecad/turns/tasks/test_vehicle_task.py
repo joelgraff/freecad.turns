@@ -74,7 +74,6 @@ class TestVehicleTask(BaseTask):
         ]
 
         self.is_playing = False
-        print ('create analysis tracker')
         self.tracker = AnalysisTracker()
         self.tracker.insert_into_scenegraph(True)
 
@@ -112,7 +111,6 @@ class TestVehicleTask(BaseTask):
         self.widgets.max_steps_edit.setInputMask("999")
         self.widgets.cur_step_edit.setInputMask("999")
 
-        print(self.widgets.cur_step_edit.text())
         self.tracker.set_step(
             int(self.widgets.cur_step_edit.text())
         )
@@ -168,6 +166,10 @@ class TestVehicleTask(BaseTask):
         Gui.Selection.addSelection(_sketch)
 
         self.tracker.set_path(_sketch.Geometry)
+
+        #no refresh if called during initialization
+        if self.tracker.is_inserted:
+            self.tracker.refresh()
 
     def angle_cb(self):
         """
@@ -234,6 +236,9 @@ class TestVehicleTask(BaseTask):
         """
         Overrides base implementation (optional)
         """
+
+        self.tracker.finish()
+        self.tracker = None
 
         super().accept()
 

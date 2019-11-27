@@ -27,22 +27,28 @@ Envelope Tracker class
 
 from types import SimpleNamespace
 
-from pivy_trackers.tracker.geometry_tracker import GeometryTracker
+from pivy_trackers.coin.coin_styles import CoinStyles as Styles
+
+from pivy_trackers.trait.base import Base
 from pivy_trackers.tracker.line_tracker import LineTracker
 
 from ..support.tuple_math import TupleMath
 
-class EnvelopeTracker(GeometryTracker):
+class EnvelopeTracker(Base):
 
     """
     Vehicle Tracker class
     """
 
+    outer_style = Styles.Style('dashed', color=Styles.Color.GREEN)
+    inner_style = Styles.Style('dashed', color=Styles.Color.GOLD)
+    
     def __init__(self, name, data, parent):
         """
         Constructor
         """
 
+        #initialize wih a separator, then reset to defaults
         super().__init__(name=name, parent=parent)
 
         self.tracks = SimpleNamespace()
@@ -88,6 +94,22 @@ class EnvelopeTracker(GeometryTracker):
                 (_track('outer_' + str(_i), [_point(_i)()]), _point(_i))
             ]
 
+        for _t in self.tracks.outer:
+            _t[0].points += _t[0].points
+            _t[0].set_style(self.outer_style)
+
+        for _t in self.tracks.inner:
+            _t[0].points += _t[0].points
+            _t[0].set_style(self.inner_style)
+
+    def reset(self):
+        """
+        Reset the envelope track data
+        """
+
+        for _t in self.tracks.inner + self.tracks.outer:
+            _t[0].points = []
+
     def refresh(self):
         """
         Update the envelope geometry
@@ -97,5 +119,18 @@ class EnvelopeTracker(GeometryTracker):
         _points = [_t[1]() for _t in _tracks]
         _points = self.transform_points(_points, self.transform_node)
 
+
         for _i, _t in enumerate(_tracks):
             _t[0].update(_t[0].points + [_points[_i]], False)
+
+    def finish(self):
+        """
+        Cleanup
+        """
+
+        for _t in self.tracks.outer + self.tracks.inner:
+            _t[0].finish()
+
+        self.tracks = None
+        self.data = None
+        self.transform_node = None
