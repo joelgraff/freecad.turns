@@ -64,8 +64,8 @@ class VehicleTracker(GeometryTracker):
 
         _pts = [(0.0, 0.0, 0.0)]*6
 
-        self.radius_tracker = \
-            LineTracker(name='radius', points=_pts, parent=self.base)
+        self.radius_tracker = LineTracker(
+                name='radius', points=_pts, parent=self.base, selectable=False)
 
         self.radius_tracker.line.numVertices.setValues(0, 2, (3, 3))
 
@@ -80,8 +80,11 @@ class VehicleTracker(GeometryTracker):
         #add the first to the end to create a closed polygon
         _veh_pts.append(_veh_pts[0])
 
-        self.body = LineTracker(self.name + '_body', _veh_pts, self.base)
-        self.axis = LineTracker(self.name + '_axis', _axis_pts, self.base)
+        self.body = LineTracker(
+            self.name + '_body', _veh_pts, self.base, selectable=False)
+
+        self.axis = LineTracker(
+            self.name + '_axis', _axis_pts, self.base, selectable=False)
 
     def build_under_carriage(self):
         """
@@ -95,9 +98,9 @@ class VehicleTracker(GeometryTracker):
 
             _pts = [_p + (0.0,) for _p in _a.end_points]
 
-            self.axles.append(
-                LineTracker(_nm.format('axle', str(_i)), _pts, self.base)
-            )
+            self.axles.append(LineTracker(
+                _nm.format('axle', str(_i)), _pts, self.base, selectable=False
+            ))
 
         #build the wheels
         for _axle in self.vehicle.axles:

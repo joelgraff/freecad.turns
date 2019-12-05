@@ -162,16 +162,42 @@ class TupleMath(Const):
         return _distance
 
     @staticmethod
-    def cross(src, dest):
+    def cross(src, dest, components=None):
         """
         Calculate the cross-product of two 3D vector tuples
+        src - tuple representing starting vector
+        dest - tuple representing ending vector
+        components - tuple indicating which components to compute.
+            Positions define components to cross (y/z, x/z, x/y)
+            - 0 = skip; 1 = compute
+            - components=(0,0,1) - compute cross of x and y components
         """
 
-        return (
-            src[1]*dest[2] - src[2]*dest[1],
-            src[2]*dest[0] - src[0]*dest[2],
-            src[0]*dest[1] - src[1]*dest[0]
-        )
+        if components is None:
+            components = (1.0, 1.0, 1.0)
+
+        assert len(src) == len(dest), """
+        TupleMath.cross(): Source and destination vectors of unequal length
+        """
+
+        assert len(components) >= len(src), """
+        TupleMath.cross(): Components undefined
+        """
+
+        _result = [0.0, 0.0, 0.0]
+        _idx = (1, 2, 0, 1)
+
+        for _i, _v in enumerate(src):
+
+            if not components[_i]:
+                continue
+
+            _a = _idx[_i]
+            _b = _idx[_i + 1]
+
+            _result[_i] = src[_a]*dest[_b] - src[_b]*dest[_a]
+
+        return _result
 
     @staticmethod
     def signed_bearing(src, dest):
@@ -187,3 +213,19 @@ class TupleMath(Const):
             _angle *= -1.0
 
         return _angle
+
+    @staticmethod
+    def point_direction(point, vector, epsilon=0.000001):
+        """
+        Returns: -1 if left, 1 if right, 0 if on line
+        """
+
+        _d = TupleMath.cross(vector, point, (0.0, 0.0, 1.0))[2]
+
+        if abs(_d) <= epsilon:
+            return 0
+
+        if _d < 0:
+            return -1
+
+        return 1

@@ -85,9 +85,20 @@ class Vehicle(Body):
         self.turn_axle = None
         self.fixed_axle = None
 
+        self.pivot_offset = 0.0
+        self.pivot_offset_sq = 0.0
+        self.lead_vehicle = None
+
         self.path = None
         self.step = 0
         self.angle = 0.0
+
+    def set_lead_vehicle(self, vehicle):
+        """
+        Set the vehicle's lead vehicle if it is being towed
+        """
+
+        self.lead_vehicle = vehicle
 
     def add_axle(self, displacement, length, is_fixed=True):
         """
@@ -192,6 +203,10 @@ class Vehicle(Body):
         # the radius, offset by half the vehicle width.
         #
         # The arc direction is -cw / +ccw
+        #
+        # If the vehicle is towed (self.lead_vehicle is not None), angle is
+        # ignored and calculations are performed using the lead vehicle
+        # turning radius.
 
         _half_pi = math.pi / 2.0
 

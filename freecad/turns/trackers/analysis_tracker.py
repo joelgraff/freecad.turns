@@ -25,18 +25,23 @@
 Analysis Tracker class
 """
 
+from types import SimpleNamespace
+
 import FreeCADGui as Gui
 
 from Part import BSplineCurve
 
+from pivy_trackers.coin.coin_styles import CoinStyles as Style
 from pivy_trackers.trait.timer import Timer
 from pivy_trackers.tracker.context_tracker import ContextTracker
+from pivy_trackers.tracker.line_tracker import LineTracker
 from ..trackers.envelope_tracker import EnvelopeTracker
 
 from ..model.analyzer import Analyzer
 from ..model.vehicle import Vehicle
 
 from ..support.tuple_math import TupleMath
+from ..support.line_segment import LineSegment
 
 from .vehicle_tracker import VehicleTracker
 
@@ -44,6 +49,14 @@ class AnalysisTracker(ContextTracker, Timer):
     """
     Analysis Tracker class
     """
+
+    @staticmethod
+    def create_section(pos):
+        """
+        Create a path section object
+        """
+
+        return SimpleNamespace(pos=pos, sides=[[]]*2)
 
     def __init__(self):
         """
@@ -58,6 +71,9 @@ class AnalysisTracker(ContextTracker, Timer):
         self.steps = 100
         self.vehicles = {}
         self.envelopes = {}
+        self.path = None
+
+        self.tracker = LineTracker('intersects', [], self.base, selectable=False)
 
         #create analysis model / engine
         self.analyzer = self.build_analyzer()
@@ -126,6 +142,197 @@ class AnalysisTracker(ContextTracker, Timer):
 
         self.stop_timer('analysis_animator')
 
+        import timeit
+
+        print('method b..')
+        _b = timeit.default_timer()
+        _x = self._build_envelope_segments()
+        print(timeit.default_timer() - _b, len(_x))
+
+#        _c = [] #list(self.tracker.coordinates)
+#        _g = self.tracker.groups
+#        _null_ortho = LineSegment((0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
+
+#        for _side in _x:
+#            for _segments in _side:
+#                for _segment in _segments:
+#                    _c += [_segment[0].start, _segment[0].end]
+#                    _g += [2]
+
+#        self.tracker.set_style(Style.ERROR)
+#        self.tracker.update(_c, _g, notify=False)
+
+        _b = self._build_outer_envelope(_x)
+
+        _c = []
+        _g = []
+
+        for _side in _b:
+
+            for _seg in _side:
+
+                _c += [_seg.start, _seg.end]
+
+        self.tracker.set_style(Style.ERROR)
+        self.tracker.update(_c, _g, notify=False)
+
+    def _build_outer_envelope(self, data):
+        """
+        Build the outer envelope
+        """
+
+        print(data)
+
+        _pos = self.path[0][0]
+        _outer_idx = []
+        _boundary = []
+        _idx = -1
+
+        #determine the outermost track on each side
+        for _segments in data[0].sides:
+
+            _prev = None
+            _seg = None
+            _side_boundary = []
+
+            for _i, _segment in enumerate(_segments):
+
+                if not _segment:
+                    continue
+
+                _dist = TupleMath.manhattan(_pos, _segment[0].start)
+
+                if _prev is not None:
+
+                    if _dist < _prev:
+                        continue
+
+                    _dist = _prev
+                    _seg = _segment
+                    _idx = _i
+                    break
+
+                _prev = _dist
+                _seg = _segment
+                _idx = _i
+
+            _outer_idx.append(_idx)
+            _boundary.append([_seg[0]])
+
+        # with the outer segments determined, iterate the subseqent segments
+        # on each side of each point, testing tracking the segments which
+        # cross it
+
+        #iterate the positions, getting the segments on both sides
+        for _i, _section in enumerate(data[1:]):
+
+            #iterate the groups of segments on each side
+            for _j, _segments in enumerate(_section.sides):
+
+                print(_i, _j, _segments, _outer_idx)
+
+                _side_boundary = _segments[_outer_idx[_j]][0]
+
+                print(_i, _side_boundary)
+
+                for _k, _segment in enumerate(_segments):
+
+                    if _k == _outer_idx[_j]:
+                        break
+
+                    if not _segment:
+                        continue
+
+                    if _segment[0].is_intersecting(_side_boundary):
+                        _side_boundary = _segment[0]
+                        _outer_idx[_j] = _k
+
+                _boundary[_j].append(_side_boundary)
+
+        return _boundary
+
+    def _build_envelope_segments(self):
+
+        _result = []
+
+        for _e in self.envelopes.values():
+            _pts = _e.get_track_points()
+
+        _tracks = []
+
+        for _group in _pts[0:2]:
+
+            _seg_group = []
+
+            for _points in _group:
+
+                _segments = [
+                    LineSegment(_points[_i], _points[_i+1])\
+                        for _i in range(0,len(_points)-1)
+                ]
+
+                _seg_group.append([_segments, 0, len(_segments)])
+
+            _tracks.append(_seg_group)
+
+        _null_ortho = LineSegment((0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
+
+        #iterate the path points:
+        for _i in range(0, len(self.path) - 1):
+
+            _prev = self.path[_i]
+
+            _lt = TupleMath.scale((-_prev[3][1], _prev[3][0], 0.0), 10)
+            _rt = TupleMath.scale(_lt, -1.0)
+
+            _lt = TupleMath.add(_prev[0], _lt)
+            _rt = TupleMath.add(_prev[0], _rt)
+
+            _ortho_segs = [
+                LineSegment(_prev[0], _lt),
+                LineSegment(_prev[0], _rt)
+            ]
+
+            _sides = []
+            _section = self.create_section(_prev)
+
+            #iterate left and right-side tracks
+            for _h, _t in enumerate(_tracks):
+
+                _segments = []
+
+                #iterate each track segment pair
+                for _j, _v in enumerate(_t):
+
+                    _found_intersect = False
+
+                    #iterate the track segments
+                    for _k in range(_v[1], _v[2]):
+
+                        _seg = _v[0][_k]
+                        _seg_int = _ortho_segs[_h].is_intersecting(_seg)
+                        _found_intersect = _seg_int[0]
+
+                        if _found_intersect:
+
+                            _section.sides[_h].append((_seg, _seg_int[1]))
+                            #store the side, track, and segment indices
+                            #_segments.append((_seg, _j, _seg_int[1]))
+                            _v[1] = _k + 1
+                            break
+
+                        print ('\n\t----<NOT FOUND>----\n\t',_i,_seg,_seg_int[1])
+
+                    if not _found_intersect:
+                        _section.sides[_h].append(())
+                        #_segments.append(())
+
+                #_sides.append(_segments)
+
+            _result.append(_section)
+
+        return _result
+
     def set_animation_speed(self, value):
         """
         Set the animation speed in frames per second
@@ -146,6 +353,7 @@ class AnalysisTracker(ContextTracker, Timer):
 
             if _v.at_path_end() and not self.analyzer.loop:
                 self.stop_animation()
+
                 return
 
         self.analyzer.step()
@@ -265,6 +473,11 @@ class AnalysisTracker(ContextTracker, Timer):
 
         ###
         #build final path data set
+        # path consists of a tuple containing the following data:
+        # - starting point of segment
+        # - directed unit vector
+        # - bearing angle of vector
+        # - tangent vetor at starting point
         ###
 
         _pos = points[0]
@@ -279,13 +492,15 @@ class AnalysisTracker(ContextTracker, Timer):
 
             _angle = -TupleMath.signed_bearing(_next, _prev)
 
+            _tangent = TupleMath.add(_next, _prev)
+
             #add to path and update state
-            _path.append((_pos, _prev, _angle))
+            _path.append((_pos, _prev, _angle, _tangent))
             _prev = _next
             _pos = points[_i]
 
         #add end-of-path tuples
-        _path.append((_pos, _prev, 0.0))
+        _path.append((_pos, _prev, 0.0, _prev))
 
         return _path
 
@@ -315,9 +530,9 @@ class AnalysisTracker(ContextTracker, Timer):
         Discretize and set the path points for the chosen path
         """
 
-        _path = self.discretize_path(path_geometry)
+        self.path = self.discretize_path(path_geometry)
 
-        self.analyzer.set_path(_path)
+        self.analyzer.set_path(self.path)
 
         for _e in self.envelopes.values():
             _e.reset()
