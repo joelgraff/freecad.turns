@@ -66,7 +66,7 @@ class TestVehicleTask(BaseTask):
             ('path_combo', 'currentIndexChanged', self.path_cb),
             ('angle_edit', 'editingFinished', self.angle_cb),
             ('radius_edit', 'editingFinished', self.radius_cb),
-            ('max_steps_edit', 'editingFinished', self.max_steps_cb),
+            #('max_steps_edit', 'editingFinished', self.max_steps_cb),
             ('cur_step_edit', 'editingFinished', self.cur_step_cb),
             ('back_button', 'clicked', self.step_back_cb),
             ('play_button', 'clicked', self.play_cb),
@@ -115,7 +115,7 @@ class TestVehicleTask(BaseTask):
             int(self.widgets.cur_step_edit.text())
         )
 
-        self.max_steps_cb(100)
+        #self.max_steps_cb(100)
         self.path_cb(0)
         self.speed_slider_cb(3)
 

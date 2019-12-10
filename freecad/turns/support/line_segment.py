@@ -31,7 +31,7 @@ from .tuple_math import TupleMath
 class LineSegment():
 
     #one-tenth millimeter default tolerance for lines to be touching
-    EPSILON = 0.1
+    EPSILON = 0.00
 
     def __init__(self, start_point, end_point):
         """
@@ -49,7 +49,7 @@ class LineSegment():
         Stringify
         """
 
-        return 'Start: {}, End: {}'.format(str(self.start), str(self.end))
+        return '{}-{}'.format(str(self.start), str(self.end))
 
     def build_bounding_box(self):
         """
@@ -78,7 +78,7 @@ class LineSegment():
             or self.box[3] < line_segment.box[2]
         )
 
-    def is_intersecting(self, line_segment):
+    def is_intersecting(self, line_segment, get_point=True):
         """
         Test to see if two line segments are interescting
         --------
@@ -99,16 +99,23 @@ class LineSegment():
         _v = ((-_y21*-_x31) + (_x21*-_y31)) / _d
 
         _is_true = (0.0 <= _u <= 1.0) and (0.0 <= _v <= 1.0)
-        _coeff = ()
+        _data = ()
 
         if _is_true:
-            _coeff = (
-                (_x21, _y21),
-                (_x43, _y43),
-                (_u, _v)
-            )
 
-        return (_is_true, _coeff)
+            if get_point:
+                _data = TupleMath.add(self.start, (_u*_x21, _u*_y21)) + (0.0,)
+
+            else:
+                _data = (
+                    (_x21, _y21),
+                    (_x43, _y43),
+                    (_u, _v)
+                )
+        else:
+            _data = _u, _v
+
+        return (_is_true, _data, (_u, _v))
 
     def get_intersection(self, segment):
         """
