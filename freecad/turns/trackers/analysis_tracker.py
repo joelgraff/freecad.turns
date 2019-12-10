@@ -189,6 +189,9 @@ class AnalysisTracker(ContextTracker, Timer):
         return _outer_points
 
     def _build_envelope_segments(self):
+        """
+        Build a structure of track segments split by left / right side
+        """
 
         for _e in self.envelopes.values():
             _pts = _e.get_track_points()
@@ -252,30 +255,32 @@ class AnalysisTracker(ContextTracker, Timer):
 
                         _seg = _track[0][_l]
                         _int = _ortho_segs[_j].is_intersecting(_seg)
+                        _dist = TupleMath.manhattan(_int[1], _pt)
 
                         if _int[0]:
-
-                            _pt_int = (_int[1], TupleMath.manhattan(_int[1], _pt))
+                            _pt_int = (_int[1], _dist)
                             _track[1] = _l + 1
                             break
 
                         else:
 
                             #test previous segment in case of a 'close fail'
-                            if _int[2][1] < 0.0 and _l > 0:
+                            if _int[2][1] >= 0.0 or _l < 0:
+                                continue
 
-                                _seg = _track[0][_l - 1]
-                                _int = _ortho_segs[_j].is_intersecting(_seg)
+                            _seg = _track[0][_l - 1]
+                            _int = _ortho_segs[_j].is_intersecting(_seg)
+                            _dist = TupleMath.manhattan(_int[1], _pt)
 
-                                if _int[0]:
-
-                                    _pt_int = (_int[1], TupleMath.manhattan(_int[1], _pt))
-                                    _track[1] = _l + 1
-                                    break
+                            if _int[0]:
+                                _pt_int = (_int[1], _dist)
+                                _track[1] = _l + 1
+                                break
 
                     _result[_j][_k].append(_pt_int)
 
         return _result
+
 
     def set_animation_speed(self, value):
         """
@@ -285,6 +290,9 @@ class AnalysisTracker(ContextTracker, Timer):
         self.set_timer_interval('analysis_animator', 1.0 / float(value))
 
     def set_animation_loop(self, value):
+        """
+        Enable / disable animation looping
+        """
 
         self.analyzer.loop = value
 
