@@ -78,7 +78,7 @@ class Analyzer(metaclass=Singleton):
         for _v in self.vehicles:
 
             _next_step = _v.step + steps
-            _end = len(_v.path) - 1
+            _end = len(_v.path.segments) - 1
 
             if _next_step > _end:
 

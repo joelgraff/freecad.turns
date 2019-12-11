@@ -29,8 +29,6 @@ from types import SimpleNamespace
 
 import FreeCADGui as Gui
 
-from Part import BSplineCurve
-
 from pivy_trackers.coin.coin_styles import CoinStyles as Style
 from pivy_trackers.trait.timer import Timer
 from pivy_trackers.tracker.context_tracker import ContextTracker
@@ -39,6 +37,7 @@ from ..trackers.envelope_tracker import EnvelopeTracker
 
 from ..model.analyzer import Analyzer
 from ..model.vehicle import Vehicle
+from ..model.path import Path
 
 from ..support.tuple_math import TupleMath
 from ..support.line_segment import LineSegment
@@ -169,7 +168,7 @@ class AnalysisTracker(ContextTracker, Timer):
         Build the outer envelope
         """
 
-        _pos = self.path[0][0]
+        _pos = self.path.segments[0].position
         _outer_points = [data[0][0], data[1][0]]
         _other_points = [data[0][1:], data[1][1:]]
 
@@ -182,7 +181,6 @@ class AnalysisTracker(ContextTracker, Timer):
                 #iterate the point / distance tuples
                 for _l, _point in enumerate(_track):
 
-                    #print(_outer_points[_j][_l], _point)
                     if _outer_points[_j][_l][1] < _point[1]:
                         _outer_points[_j][_l] = _point
 
@@ -224,23 +222,23 @@ class AnalysisTracker(ContextTracker, Timer):
 
         #step along the path, building the individual orthos and the
         #trak csegments that are on the left and right sides of each section
-        for _i, _pt in enumerate(self.path):
+        for _i, _seg in enumerate(self.path.segments):
 
-            _prev = self.path[_i]
+            _prev = self.path.segments[_i]
             _section = self.create_section(_prev)
 
-            _lt = TupleMath.scale((-_prev[3][1], _prev[3][0], 0.0), 10)
+            _lt = TupleMath.scale(TupleMath.ortho(_prev.tangent), 10)
             _rt = TupleMath.scale(_lt, -1.0)
 
-            _lt = TupleMath.add(_prev[0], _lt)
-            _rt = TupleMath.add(_prev[0], _rt)
+            _lt = TupleMath.add(_prev.position, _lt)
+            _rt = TupleMath.add(_prev.position, _rt)
 
             _ortho_segs = [
-                LineSegment(_prev[0], _lt),
-                LineSegment(_prev[0], _rt)
+                LineSegment(_prev.position, _lt),
+                LineSegment(_prev.position, _rt)
             ]
 
-            _pt = _prev[0]
+            _pt = _prev.position
 
             #iterate left and right sides
             for _j, _side in enumerate(_tracks):
@@ -320,142 +318,6 @@ class AnalysisTracker(ContextTracker, Timer):
             _v.refresh()
             self.envelopes[_i].refresh()
 
-    def discretize_path(self, path_geometry):
-        """
-        Discretize geometry into a series of points
-        """
-
-        _points = self.discretize_part_geometry(path_geometry)
-        self.flipped_reversed_edges(_points)
-        pts = self.combine_points(_points)
-
-        return self.build_path_data(pts)
-
-    def discretize_part_geometry(self, part_geometry):
-        """
-        Discretize Part geometry into points, returning a dict of points
-        keyed to the reference to the originating Part edge
-        """
-
-        _pts = {}
-
-        for _edge in part_geometry:
-
-            #discretize the edge
-            if _edge.isDerivedFrom('Part::GeomArcOfCircle') \
-                or isinstance(_edge, BSplineCurve):
-
-                _pts[_edge] = [
-                    tuple(_v) for _v in _edge.discretize(self.steps)
-                ]
-
-            elif _edge.isDerivedFrom('Part::GeomLineSegment'):
-                _pts[_edge] = [
-                    tuple(_v) for _v in [_edge.StartPoint, _edge.EndPoint]
-                ]
-
-        return _pts
-
-    def flipped_reversed_edges(self, geo_dct):
-        """
-        Reverse the points of flipped edges in the geometry dictionary
-        """
-
-        _prev = None
-        _flip_test = []
-        _flipped_edges = {}
-
-        #check for proper point order
-        for _edge, _points in geo_dct.items():
-
-            if not _prev:
-                _prev = _edge
-                continue
-
-            #test for flipped endpoints
-            _flip_test = [
-                TupleMath.manhattan(_prev.StartPoint, _edge.StartPoint) < 0.01,
-                TupleMath.manhattan(_prev.EndPoint, _edge.EndPoint) < 0.01,
-                TupleMath.manhattan(_prev.StartPoint, _edge.EndPoint) < 0.01
-            ]
-
-            #flip the current edge points if either of last two cases
-            if _flip_test[1] or _flip_test[2]:
-
-                if _edge not in _flipped_edges:
-                    _flipped_edges[_edge] = True
-                    geo_dct[_edge] = geo_dct[_edge][::-1]
-
-            #flip the previous edge points if first or last case
-            if _flip_test[0] or _flip_test[2]:
-
-                if _prev not in _flipped_edges:
-                    _flipped_edges[_prev] = True
-                    geo_dct[_prev] = geo_dct[_prev][::-1]
-
-            _prev = _edge
-
-    def combine_points(self, dct):
-        """
-        Combine a dictionary of points into a single list,
-        eliminating duplicates and building the vector / angle tuples
-        """
-        ###
-        #combine the points into a single list of tuples
-        ###
-        _points = []
-
-        for _v in dct.values():
-
-            _p = [_w for _w in _v]
-
-            #Eliminate duplicates at start / end points
-            if _points:
-                if TupleMath.manhattan(_p[0], _points[-1]) < 0.01:
-                    _p = _p[1:]
-
-            _points += _p
-
-        return _points
-
-    def build_path_data(self, points):
-        """
-        Build the path data set, pre-calculating key values
-        """
-
-        ###
-        #build final path data set
-        # path consists of a tuple containing the following data:
-        # - starting point of segment
-        # - directed unit vector
-        # - bearing angle of vector
-        # - tangent vetor at starting point
-        ###
-
-        _pos = points[0]
-        _prev = TupleMath.unit(TupleMath.subtract(points[1], points[0]))
-        _path = []
-
-        for _i in range(1, len(points) - 2):
-
-            #calculate look-ahead vector, and angle beteen vectors
-            _next = TupleMath.subtract(points[_i + 1], points[_i])
-            _next = TupleMath.unit(_next)
-
-            _angle = -TupleMath.signed_bearing(_next, _prev)
-
-            _tangent = TupleMath.add(_next, _prev)
-
-            #add to path and update state
-            _path.append((_pos, _prev, _angle, _tangent))
-            _prev = _next
-            _pos = points[_i]
-
-        #add end-of-path tuples
-        _path.append((_pos, _prev, 0.0, _prev))
-
-        return _path
-
     def set_max_steps(self, steps):
         """
         Set the maximum number of steps for the path and re-discretize
@@ -477,13 +339,12 @@ class AnalysisTracker(ContextTracker, Timer):
 
         self.analyzer.set_step(self.analyzer.step + step)
 
-    def set_path(self, path_geometry):
+    def set_path(self, geometry):
         """
         Discretize and set the path points for the chosen path
         """
 
-        self.path = self.discretize_path(path_geometry)
-
+        self.path = Path(geometry, self.steps)
         self.analyzer.set_path(self.path)
 
         for _e in self.envelopes.values():

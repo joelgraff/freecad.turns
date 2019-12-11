@@ -163,18 +163,24 @@ class Vehicle(Body):
         if not self.path:
             return
 
-        if step > len(self.path) - 1:
-            step = len(self.path) - 1
+        _num_segs = len(self.path.segments) - 1
+
+        if step > _num_segs:
+            step = _num_segs
 
         if self.step == step and not force_refresh:
             return
 
         self.orientation = \
-            -TupleMath.signed_bearing(self.path[step][1], (1.0, 0.0, 0.0))
+            -TupleMath.signed_bearing(
+                self.path.segments[step].vector, (1.0, 0.0, 0.0)
+            )
 
-        if self.step < len(self.path) - 1:
+        if self.step < _num_segs:
 
-            _angle = self.path[step][2]
+            #for _seg in self.path.segments:
+                #print('pos: {}, vec: {}, angle: {}, tan: {}'.format(str(_seg.position), str(_seg.vector), str(_seg.angle), str(_seg.tangent)))
+            _angle = self.path.segments[step].angle
 
             if _angle:
                 self.update(_angle)
@@ -186,7 +192,7 @@ class Vehicle(Body):
         True if the vehicle step position is at end of the path
         """
 
-        return self.step >= len(self.path) - 1
+        return self.step >= len(self.path.segments) - 1
 
     def update(self, angle):
         """

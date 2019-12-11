@@ -136,7 +136,7 @@ class TupleMath(Const):
         if not is_ccw:
             _x_sign, _y_sign = _y_sign, _x_sign
 
-        return tuple(_x_sign * tpl[x_index], _y_sign * tpl[y_index])
+        return (_x_sign * tpl[y_index], _y_sign * tpl[x_index])
 
     @staticmethod
     def manhattan(lhs, rhs):

@@ -163,7 +163,7 @@ class VehicleTracker(GeometryTracker):
         if not self.vehicle.path:
             return
 
-        _pos = self.vehicle.path[self.vehicle.step][0]
+        _pos = self.vehicle.path.segments[self.vehicle.step].position
 
         self.geometry.set_translation(_pos)
         self.geometry.set_rotation(self.vehicle.orientation)
