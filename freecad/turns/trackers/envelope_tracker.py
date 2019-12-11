@@ -62,7 +62,7 @@ class EnvelopeTracker(Base):
 
         self.data = data
 
-        self.build_envelope_tracks()
+        self._build_envelope_tracks()
 
         self.set_visibility()
 
@@ -77,7 +77,7 @@ class EnvelopeTracker(Base):
             [_t[0].coordinates for _t in self.tracks.inner]
         )
 
-    def build_envelope_tracks(self):
+    def _build_envelope_tracks(self):
         """
         Create the envelope tracker objects
         """
@@ -128,46 +128,131 @@ class EnvelopeTracker(Base):
             _t[0].coordinates += _t[0].coordinates
             _t[0].set_style(self.inner_style)
 
-    def build_envelope(self):
+    def get_envelope(self, path):
         """
-        Build the ordered set of points which represent the outer envelope
+        Return the outer envelope
         """
 
-        _tracks = self.tracks.outer_left
+        import timeit
 
-        _outer_track = None
-        _points = []
+        _t = timeit.default_timer()
+        _x = self._build_envelope_segments(path)
+        _t1 = timeit.default_timer() - _t
 
-        for _i in range(0, len(_tracks[0][0].points)-1):
+        _t = timeit.default_timer()
+        _b = self._build_outer_envelope(_x)
+        _t2 = timeit.default_timer() - _t
 
-            _cur_outer_track = _outer_track
+        print(1.0 / (_t1 + _t2))
 
-            for _t in _tracks:
+        return _b
 
-                #don't test edge against itself
-                if _outer_track is _t[0]:
-                    continue
+    def _build_outer_envelope(self, data):
+        """
+        Build the outer envelope
+        """
 
-                if not _outer_track:
-                    _outer_track = _t[0]
+        _outer_points = [data[0][0], data[1][0]]
+        _other_points = [data[0][1:], data[1][1:]]
 
-                #ensure we aren't picking up the original edge croos
-                #if more than one crossing on the same edge occurs
-                if _t[0] is _cur_outer_track:
-                    continue
+        #iterate each side
+        for _j, _side in enumerate(_other_points):
 
-                _outer_edge = LineSegment(
-                    _outer_track.points[_i], _outer_track.points[_i+1])
+            #iterate each track
+            for _k, _track in enumerate(_side):
 
-                _edge =\
-                    LineSegment(_t[0].points[_i], _t[0].points[_i+1])
+                #iterate the point / distance tuples
+                for _l, _point in enumerate(_track):
 
-                if _outer_edge.intersect(_edge):
-                    _outer_track = _t[0]
+                    if _outer_points[_j][_l][1] < _point[1]:
+                        _outer_points[_j][_l] = _point
 
-                _points += _outer_edge.points
+        return _outer_points
 
-        self.envelope.update(_points)
+    def _build_envelope_segments(self, path):
+        """
+        Build a structure of track segments split by left / right side
+        """
+
+        _pts = self.get_track_points()
+        _tracks = []
+
+        for _group in _pts[0:2]:
+
+            _seg_group = []
+
+            for _points in _group:
+
+                _segments = [
+                    LineSegment(_points[_i], _points[_i+1])\
+                        for _i in range(0, len(_points)-1)
+                ]
+
+                _seg_group.append([_segments, 0, len(_segments)])
+
+            _tracks.append(_seg_group)
+
+        _null_ortho = LineSegment((0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
+        _result = []
+
+        for _i, _s in enumerate(_tracks):
+            _result.append([])
+
+            for _j, _t in enumerate(_s):
+                _result[-1].append([])
+
+        #step along the path, building the individual orthos and the
+        #track segments that are on the left and right sides of each section
+        for _i, _seg in enumerate(path.segments):
+
+            _prev = path.segments[_i]
+
+            _lt = TupleMath.scale(TupleMath.ortho(_prev.tangent), 10)
+            _o_segs = [_lt, TupleMath.scale(_lt, -1.0)]
+            _o_segs = [TupleMath.add(_prev.position, _v) for _v in _o_segs]
+            _o_segs = [LineSegment(_prev.position, _v) for _v in _o_segs]
+
+            _pt = _prev.position
+
+            #iterate left and right sides
+            for _j, _side in enumerate(_tracks):
+
+                #iterate each track on the side
+                for _k, _track in enumerate(_side):
+
+                    _pt_int = (_pt, 0.0)
+                    _first_track = _track[0]
+
+                    #iterate each segment in the track
+                    for _l in range(_track[1], _track[2]):
+
+                        _seg = _first_track[_l]
+                        _int = _o_segs[_j].is_intersecting(_seg)
+                        _dist = TupleMath.manhattan(_int[1], _pt)
+
+                        if _int[0]:
+                            _pt_int = (_int[1], _dist)
+                            _track[1] = _l + 1
+                            break
+
+                        else:
+
+                            #test previous segment in case of a 'close fail'
+                            if _int[2][1] >= 0.0 or _l < 0:
+                                continue
+
+                            _seg = _first_track[_l - 1]
+                            _int = _o_segs[_j].is_intersecting(_seg)
+                            _dist = TupleMath.manhattan(_int[1], _pt)
+
+                            if _int[0]:
+                                _pt_int = (_int[1], _dist)
+                                _track[1] = _l + 1
+                                break
+
+                    _result[_j][_k].append(_pt_int)
+
+        return _result
 
     def reset(self):
         """

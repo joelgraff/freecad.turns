@@ -39,9 +39,6 @@ from ..model.analyzer import Analyzer
 from ..model.vehicle import Vehicle
 from ..model.path import Path
 
-from ..support.tuple_math import TupleMath
-from ..support.line_segment import LineSegment
-
 from .vehicle_tracker import VehicleTracker
 
 class AnalysisTracker(ContextTracker, Timer):
@@ -119,15 +116,14 @@ class AnalysisTracker(ContextTracker, Timer):
         """
 
         _idx = str(len(self.vehicles))
-
         _v = VehicleTracker(name=vehicle.name, data=vehicle, parent=self.base)
+
         self.vehicles[vehicle.name] = _v
 
         self.envelopes[vehicle.name] =\
             EnvelopeTracker(name=vehicle.name, data=vehicle, parent=self.base)
 
         self.envelopes[vehicle.name].transform_node = _v.geometry.coordinate
-        #self.envelopes[vehicle.name].set_visibility(False)
 
     def start_animation(self):
         """
@@ -143,142 +139,16 @@ class AnalysisTracker(ContextTracker, Timer):
 
         self.stop_timer('analysis_animator')
 
-        import timeit
+        for _e in self.envelopes.values():
+            _result = _e.get_envelope(self.path)
+            break
 
-        _t = timeit.default_timer()
-        _x = self._build_envelope_segments()
-        _t1 = timeit.default_timer() - _t
-        _t = timeit.default_timer()
-        _b = self._build_outer_envelope(_x)
-        _t2 = timeit.default_timer() - _t
-
-        _c = []
-        _g = []
-        _c += [_v[0] for _v in _b[0]] + [_v[0] for _v in _b[1]]
-        _g += [len(_b[0]), len(_b[1])]
+        _c = [_v[0] for _v in _result[0]] + [_v[0] for _v in _result[1]]
+        _g = [len(_result[0]), len(_result[1])]
 
         self.tracker.set_style(Style.ERROR)
         self.tracker.update(_c, _g, notify=False)
         self.tracker.show_markers()
-
-        print(1.0 / (_t1 + _t2))
-
-    def _build_outer_envelope(self, data):
-        """
-        Build the outer envelope
-        """
-
-        _pos = self.path.segments[0].position
-        _outer_points = [data[0][0], data[1][0]]
-        _other_points = [data[0][1:], data[1][1:]]
-
-        #iterate each side
-        for _j, _side in enumerate(_other_points):
-
-            #iterate each track
-            for _k, _track in enumerate(_side):
-
-                #iterate the point / distance tuples
-                for _l, _point in enumerate(_track):
-
-                    if _outer_points[_j][_l][1] < _point[1]:
-                        _outer_points[_j][_l] = _point
-
-        return _outer_points
-
-    def _build_envelope_segments(self):
-        """
-        Build a structure of track segments split by left / right side
-        """
-
-        for _e in self.envelopes.values():
-            _pts = _e.get_track_points()
-
-        _tracks = []
-
-        for _group in _pts[0:2]:
-
-            _seg_group = []
-
-            for _points in _group:
-
-                _segments = [
-                    LineSegment(_points[_i], _points[_i+1])\
-                        for _i in range(0, len(_points)-1)
-                ]
-
-                _seg_group.append([_segments, 0, len(_segments)])
-
-            _tracks.append(_seg_group)
-
-        _null_ortho = LineSegment((0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
-        _result = []
-
-        for _i, _s in enumerate(_tracks):
-            _result.append([])
-
-            for _j, _t in enumerate(_s):
-                _result[-1].append([])
-
-        #step along the path, building the individual orthos and the
-        #trak csegments that are on the left and right sides of each section
-        for _i, _seg in enumerate(self.path.segments):
-
-            _prev = self.path.segments[_i]
-            _section = self.create_section(_prev)
-
-            _lt = TupleMath.scale(TupleMath.ortho(_prev.tangent), 10)
-            _rt = TupleMath.scale(_lt, -1.0)
-
-            _lt = TupleMath.add(_prev.position, _lt)
-            _rt = TupleMath.add(_prev.position, _rt)
-
-            _ortho_segs = [
-                LineSegment(_prev.position, _lt),
-                LineSegment(_prev.position, _rt)
-            ]
-
-            _pt = _prev.position
-
-            #iterate left and right sides
-            for _j, _side in enumerate(_tracks):
-
-                #iterate each track on the side
-                for _k, _track in enumerate(_side):
-
-                    _pt_int = (_pt, 0.0)
-
-                    #iterate each segment in the track
-                    for _l in range(_track[1], _track[2]):
-
-                        _seg = _track[0][_l]
-                        _int = _ortho_segs[_j].is_intersecting(_seg)
-                        _dist = TupleMath.manhattan(_int[1], _pt)
-
-                        if _int[0]:
-                            _pt_int = (_int[1], _dist)
-                            _track[1] = _l + 1
-                            break
-
-                        else:
-
-                            #test previous segment in case of a 'close fail'
-                            if _int[2][1] >= 0.0 or _l < 0:
-                                continue
-
-                            _seg = _track[0][_l - 1]
-                            _int = _ortho_segs[_j].is_intersecting(_seg)
-                            _dist = TupleMath.manhattan(_int[1], _pt)
-
-                            if _int[0]:
-                                _pt_int = (_int[1], _dist)
-                                _track[1] = _l + 1
-                                break
-
-                    _result[_j][_k].append(_pt_int)
-
-        return _result
-
 
     def set_animation_speed(self, value):
         """

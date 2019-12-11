@@ -178,8 +178,6 @@ class Vehicle(Body):
 
         if self.step < _num_segs:
 
-            #for _seg in self.path.segments:
-                #print('pos: {}, vec: {}, angle: {}, tan: {}'.format(str(_seg.position), str(_seg.vector), str(_seg.angle), str(_seg.tangent)))
             _angle = self.path.segments[step].angle
 
             if _angle:
