@@ -57,25 +57,36 @@ class TestVehicleTask(BaseTask):
         self.path_editor = PathEditorCommand()
 
         # define the widget signalling data tuples as:
-        # (widget_name, widget_signal_name, callback)
-        self.widget_callbacks = [
-            ('loop_checkbox', 'stateChanged', self.loop_checkbox_cb),
-            ('animation_speed_slider', 'valueChanged', self.speed_slider_cb),
-            ('create_path_button', 'clicked', self.create_edit_path_cb),
-            ('edit_path_button', 'clicked', self.create_edit_path_cb),
-            ('path_combo', 'currentIndexChanged', self.path_cb),
-            ('angle_edit', 'editingFinished', self.angle_cb),
-            ('radius_edit', 'editingFinished', self.radius_cb),
-            #('max_steps_edit', 'editingFinished', self.max_steps_cb),
-            ('cur_step_edit', 'editingFinished', self.cur_step_cb),
-            ('back_button', 'clicked', self.step_back_cb),
-            ('play_button', 'clicked', self.play_cb),
-            ('forward_button', 'clicked', self.step_forward_cb)
-        ]
+        #(widget_name, widget_signal_name, callback)
+        self.widget_callbacks = {
+
+            'loop_checkbox': ('stateChanged', self.fr_loop_checkbox, None),
+
+            'animation_speed_slider':\
+                ('valueChanged', self.fr_speed_slider, None),
+
+            'create_path_button': ('clicked', self.fr_create_edit_path, None),
+            'edit_path_button': ('clicked', self.fr_create_edit_path, None),
+            'path_combo': ('currentIndexChanged', self.fr_path, None),
+
+            'max_steps_edit': ('editingFinished', self.fr_max_steps, None),
+
+            'cur_step_edit':\
+                ('editingFinished', self.fr_cur_step, self.to_cur_step),
+
+            'length_edit': ('', None, self.to_length_edit),
+            'width_edit': ('', None, self.to_width_edit),
+            'cur_angle_edit': ('', None, self.to_cur_angle),
+            'cur_radius_edit': ('', None, self.to_cur_radius),
+
+            'back_button': ('clicked', self.fr_step_back, None),
+            'play_button': ('clicked', self.fr_play, None),
+            'forward_button': ('clicked', self.fr_step_forward, None)
+        }
 
         self.is_playing = False
         self.tracker = AnalysisTracker()
-        self.tracker.insert_into_scenegraph(True)
+        self.tracker.insert_into_scenegraph()
 
     def setup_ui(self):
         """
@@ -85,6 +96,11 @@ class TestVehicleTask(BaseTask):
         _sel = Gui.Selection.getSelection()
 
         super().setup_ui()
+
+        #set callbacks for tracker to update UI
+        self.tracker.to_step = self.to_cur_step
+        self.tracker.to_radius = self.to_cur_radius
+        self.tracker.to_angle = self.to_cur_angle
 
         #button references
         _play = self.widgets.play_button
@@ -110,30 +126,30 @@ class TestVehicleTask(BaseTask):
 
         self.widgets.max_steps_edit.setInputMask("999")
         self.widgets.cur_step_edit.setInputMask("999")
+        self.tracker.set_step(int(self.widgets.cur_step_edit.text()))
 
-        self.tracker.set_step(
-            int(self.widgets.cur_step_edit.text())
-        )
+        #set the vehicle data in the UI
+        self.widgets.length_edit.setText(
+            str(self.tracker.analyzer.vehicles[0].dimensions[0]))
 
-        #self.max_steps_cb(100)
-        self.path_cb(0)
-        self.speed_slider_cb(3)
+        self.widgets.width_edit.setText(
+            str(self.tracker.analyzer.vehicles[0].dimensions[1]))
 
-    def loop_checkbox_cb(self, value):
+    def fr_loop_checkbox(self, value):
         """
         Callback for loop checkbox state
         """
 
         self.tracker.set_animation_loop(self.widgets.loop_checkbox.isChecked())
 
-    def create_edit_path_cb(self):
+    def fr_create_edit_path(self):
         """
         Edit an existing sketch path
         """
 
         self.path_editor.Activated()
 
-    def speed_slider_cb(self, value):
+    def fr_speed_slider(self, value):
         """
         Callback for changes to the animation slider position
         """
@@ -146,7 +162,7 @@ class TestVehicleTask(BaseTask):
 
         self.tracker.set_animation_speed(value)
 
-    def path_cb(self, value):
+    def fr_path(self, value):
         """
         Callback for path combobox (currentIndexChanged)
         """
@@ -167,53 +183,53 @@ class TestVehicleTask(BaseTask):
 
         self.tracker.set_path(_sketch.Geometry)
 
-        #no refresh if called during initialization
-        if self.tracker.is_inserted:
-            self.tracker.refresh()
-
-    def angle_cb(self):
+    def to_cur_angle(self, value):
         """
-        Callback for vehicle max steering angle line edit
+        Callback for vehicle steering angle update
         """
 
-        print('angle_cb')
+        self.widgets.cur_angle_edit.setText('{:12.2f}'.format(value))
 
-    def radius_cb(self):
+    def to_cur_radius(self, value):
         """
-        Callback for vehicle min turning radius line edit
+        Callback for vehicle radius
         """
 
-        print('radius_cb')
+        self.widgets.cur_radius_edit.setText('{:12.2f}'.format(value))
 
-    def max_steps_cb(self, value):
+    def fr_max_steps(self, value):
         """
         Callback for maximum steps line edit
         """
 
-        self.tracker.set_max_steps(int(value))
+        self.tracker.set_max_steps('{:12.2f}'.format(value))
 
-    def cur_step_cb(self, value):
+    def fr_cur_step(self, value):
         """
         Callback for current step line edit
         """
 
         self.tracker.set_step(int(value))
 
-    def step_forward_cb(self):
+    def to_cur_step(self, value):
+
+        self.widgets.cur_step_edit.setText('{}'.format(str(value)))
+
+    def fr_step_forward(self):
         """
         Step forward callback
         """
 
         self.tracker.move_step(1)
 
-    def step_back_cb(self):
+    def fr_step_back(self):
         """
         Step backward callback
         """
 
         self.tracker.move_step(-1)
 
-    def play_cb(self):
+    def fr_play(self):
         """
         Play simulation callback
         """
@@ -231,6 +247,20 @@ class TestVehicleTask(BaseTask):
 
         _play = self.widgets.play_button
         _play.setIcon(_play.style().standardIcon(_icon))
+
+    def to_length_edit(self, value):
+        """
+        Update the length UI edit with the selected vehicle data
+        """
+
+        self.widgets.length_edit.setText(str(value))
+
+    def to_width_edit(self, value):
+        """
+        Update the width UI edit with the selected vehicle data
+        """
+
+        self.widgets.width_edit.setText(str(value))
 
     def accept(self):
         """

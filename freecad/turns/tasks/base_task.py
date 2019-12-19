@@ -57,7 +57,7 @@ class BaseTask():
 
         self.panel = None
         self.ui = panel_filepath
-        self.widget_callbacks = []
+        self.widget_callbacks = {}
         self.widgets = types.SimpleNamespace()
 
     def setup_ui(self):
@@ -76,11 +76,15 @@ class BaseTask():
         #build the widget metadata object
         self.widgets = types.SimpleNamespace()
 
-        for _v in self.widget_callbacks:
+        for _k, _v in self.widget_callbacks.items():
 
-            _ref = self.panel.findChild(QtGui.QWidget, _v[0])
-            getattr(_ref, _v[1]).connect(_v[2])
-            setattr(self.widgets, _v[0], _ref)
+            _ref = self.panel.findChild(QtGui.QWidget, _k)
+            setattr(self.widgets, _k, _ref)
+
+            if not _v[1]:
+                continue
+
+            getattr(_ref, _v[0]).connect(_v[1])
 
     def accept(self):
         """

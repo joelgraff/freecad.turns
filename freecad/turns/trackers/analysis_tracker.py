@@ -29,11 +29,11 @@ from types import SimpleNamespace
 
 import FreeCADGui as Gui
 
+from pivy_trackers.support.todo import todo
 from pivy_trackers.coin.coin_styles import CoinStyles as Style
 from pivy_trackers.trait.timer import Timer
 from pivy_trackers.tracker.context_tracker import ContextTracker
 from pivy_trackers.tracker.line_tracker import LineTracker
-from ..trackers.envelope_tracker import EnvelopeTracker
 
 from ..model.analyzer import Analyzer
 from ..model.vehicle import Vehicle
@@ -68,8 +68,13 @@ class AnalysisTracker(ContextTracker, Timer):
         self.vehicles = {}
         self.envelopes = {}
         self.path = None
+        self.tracker = None
 
-        self.tracker = LineTracker('intersects', [], self.base, selectable=False)
+        self.to_step = lambda x: print('to_cur_step')
+        self.to_length = lambda x: print('to_length')
+        self.to_width = lambda x: print('to_width')
+        self.to_radius = lambda x: print('to_radius')
+        self.to_angle = lambda x: print('to_angle')
 
         #create analysis model / engine
         self.analyzer = self.build_analyzer()
@@ -80,6 +85,14 @@ class AnalysisTracker(ContextTracker, Timer):
 
         self.set_visibility()
 
+    def build_envelopes(self):
+        """
+        Build envelope trackers
+        """
+
+        self.tracker = LineTracker(
+            'intersects', [], self.base, selectable=False)
+
     def build_analyzer(self):
         """
         Create analyzer for vehicle
@@ -87,13 +100,14 @@ class AnalysisTracker(ContextTracker, Timer):
 
         _analyzer = Analyzer()
 
-        _v = Vehicle('car.1', (19.0, 7.0))
-        _v.add_axle(6.5, 6.0, False)
-        _v.add_axle(-4.5, 6.0)
-        _v.set_minimum_radius(24.0)
+        _v = Vehicle.from_template('P')
+
+        #_v = Vehicle('car.1', (19.0, 7.0))
+        #_v.add_axle(6.5, 6.0, False)
+        #_v.add_axle(-4.5, 6.0)
+        #_v.set_minimum_radius(24.0)
 
         _analyzer.vehicles.append(_v)
-
         _analyzer.set_step(0, True)
 
         return _analyzer
@@ -120,15 +134,12 @@ class AnalysisTracker(ContextTracker, Timer):
 
         self.vehicles[vehicle.name] = _v
 
-        self.envelopes[vehicle.name] =\
-            EnvelopeTracker(name=vehicle.name, data=vehicle, parent=self.base)
-
-        self.envelopes[vehicle.name].transform_node = _v.geometry.coordinate
-
     def start_animation(self):
         """
         Start the animation timer
         """
+
+        todo.delay(self.build_envelopes, None)
 
         self.start_timer('analysis_animator')
 
@@ -139,16 +150,19 @@ class AnalysisTracker(ContextTracker, Timer):
 
         self.stop_timer('analysis_animator')
 
-        for _e in self.envelopes.values():
-            _result = _e.get_envelope(self.path)
-            break
+        for _v in self.vehicles.values():
+            _v.envelope.reset()
 
-        _c = [_v[0] for _v in _result[0]] + [_v[0] for _v in _result[1]]
-        _g = [len(_result[0]), len(_result[1])]
+        #for _e in self.envelopes.values():
+        #    _result = _e.get_envelope(self.path)
+        #    break
 
-        self.tracker.set_style(Style.ERROR)
-        self.tracker.update(_c, _g, notify=False)
-        self.tracker.show_markers()
+        #_c = [_v[0] for _v in _result[0]] + [_v[0] for _v in _result[1]]
+        #_g = [len(_result[0]), len(_result[1])]
+
+        #self.tracker.set_style(Style.ERROR)
+        #self.tracker.update(_c, _g, notify=False)
+        #self.tracker.show_markers()
 
     def set_animation_speed(self, value):
         """
@@ -171,13 +185,32 @@ class AnalysisTracker(ContextTracker, Timer):
 
         for _v in self.analyzer.vehicles:
 
-            if _v.at_path_end() and not self.analyzer.loop:
-                self.stop_animation()
+            if _v.at_path_end():
 
-                return
+                if not self.analyzer.loop:
+                    self.stop_animation()
+                    return
+
+                self.reset()
 
         self.analyzer.step()
         self.refresh()
+        self.to_step(self.analyzer.cur_step)
+        self.to_radius(self.analyzer.vehicles[0].radius)
+        self.to_angle(self.analyzer.vehicles[0].angle)
+
+    def reset(self):
+        """
+        Reset the envelope tracker
+        """
+
+        if not self.is_inserted:
+            return
+
+        for _e in self.envelopes.values():
+            self.base.remove_node(_e.root)
+
+        self.envelopes = {}
 
     def refresh(self):
         """
@@ -186,7 +219,6 @@ class AnalysisTracker(ContextTracker, Timer):
 
         for _i, _v  in self.vehicles.items():
             _v.refresh()
-            self.envelopes[_i].refresh()
 
     def set_max_steps(self, steps):
         """
@@ -214,11 +246,15 @@ class AnalysisTracker(ContextTracker, Timer):
         Discretize and set the path points for the chosen path
         """
 
+        if self.is_inserted:
+            self.reset()
+
         self.path = Path(geometry, self.steps)
         self.analyzer.set_path(self.path)
 
-        for _e in self.envelopes.values():
-            _e.reset()
+        for _v in self.vehicles.values():
+            _v.refresh()
+            _v.envelope.reset()
 
     def finish(self):
         """

@@ -30,6 +30,8 @@ from pivy_trackers.tracker.line_tracker import LineTracker
 
 from ..support.tuple_math import TupleMath
 
+from .envelope_tracker import EnvelopeTracker
+
 class VehicleTracker(GeometryTracker):
     """
     Vehicle Tracker class
@@ -47,15 +49,29 @@ class VehicleTracker(GeometryTracker):
         self.axles = []
         self.wheels = {}
         self.radius_tracker = []
-
+        self.envelope = None
         self.vehicle = data
 
         self.build_body()
         self.build_under_carriage()
         self.build_radius_tracker()
+        self.build_envelope()
 
         self.set_visibility()
         self.name = name
+
+    def build_envelope(self):
+        """
+        Build trackesr for the envelope tracks
+        """
+
+        self.envelope = EnvelopeTracker(
+            name=self.name + '_ENVELOPE', data=self.vehicle, parent=None)
+
+        #insert the envelope at the top, before the transform node
+        self.base.insert_node(self.envelope.root, self.base.top, 0)
+
+        self.envelope.transform_node = self.geometry.transform
 
     def build_radius_tracker(self):
         """
@@ -65,7 +81,7 @@ class VehicleTracker(GeometryTracker):
         _pts = [(0.0, 0.0, 0.0)]*6
 
         self.radius_tracker = LineTracker(
-                name='radius', points=_pts, parent=self.base, selectable=False)
+            name='radius', points=_pts, parent=self.base, selectable=False)
 
         self.radius_tracker.line.numVertices.setValues(0, 2, (3, 3))
 
@@ -179,6 +195,7 @@ class VehicleTracker(GeometryTracker):
                 self.wheels[_wheel].geometry.set_rotation(_wheel.angle)
 
         self.refresh_radius()
+        self.envelope.refresh()
 
     def finish(self):
         """

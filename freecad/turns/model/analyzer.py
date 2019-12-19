@@ -31,9 +31,11 @@ def test():
 
     _a = Analyzer()
 
-    _v = Vehicle((8.0, 20.0), 1.0)
-    _v.add_axle(0.0, 3.0)
-    _v.add_axle(10.0, 3.0)
+    #_v = Vehicle((8.0, 20.0), 1.0)
+    #_v.add_axle(0.0, 3.0)
+    #_v.add_axle(10.0, 3.0)
+
+    _v = Vehicle.from_template('BUS-40')
 
     _a.vehicles.append(_v)
     _a.step()
@@ -56,6 +58,9 @@ class Analyzer(metaclass=Singleton):
 
         #position along path
         self.position = 0.0
+
+        #current step in analysis
+        self.cur_step = 0
 
         #loop analysis
         self.loop = False
@@ -99,6 +104,8 @@ class Analyzer(metaclass=Singleton):
             if _next_step != _v.step:
                 _v.set_step(_next_step)
 
+            self.cur_step = _next_step
+
     def set_step(self, step, refresh=False):
         """
         Set the analysis at a specific step along the path
@@ -107,12 +114,16 @@ class Analyzer(metaclass=Singleton):
         for _v in self.vehicles:
             _v.set_step(step, refresh)
 
+        self. cur_step = step
+
     def step(self):
         """
         Step the animation of each vehicle one step forward
         """
 
         self.move_steps(1)
+
+        self.cur_step += 1
 
     def update(self, angles):
         """

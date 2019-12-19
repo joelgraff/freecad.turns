@@ -25,6 +25,8 @@ Vehicle model object
 """
 
 import math
+import json
+import os
 
 from ..support.tuple_math import TupleMath
 
@@ -37,11 +39,62 @@ class Vehicle(Body):
     Vehicle model object
     """
 
+    #static dictionary of pre-defined vehicle templates
+    templates = {}
+
+    @staticmethod
+    def from_template(symbol, name=None):
+        """
+        Create a new vehicle object from a template
+        """
+
+        if not Vehicle.templates:
+
+            _fp = os.path.abspath(os.path.dirname(__file__))\
+                + '/vehicle_templates.json'
+
+            _db = json.load(open(_fp, 'r'))['vehicles']
+
+            for _veh in _db:
+
+                _key = _veh['Symbol']
+
+                if isinstance(_key, list):
+                    _key = _key[0]
+
+                Vehicle.templates[_key] = _veh
+
+        assert (symbol in Vehicle.templates),\
+            'Template "{}" undefined'.format(symbol)
+
+        _t = Vehicle.templates[symbol]
+
+        if not name:
+            name = _t['Type']
+
+        _vehicle = Vehicle(name, [_t['Length'], _t['Width']])
+
+        _axle_length = _t['Width'] - 1.0
+        _axle_positions = [
+            _t['Length']/2.0 - _t['Front'],
+            _t['Length']/2.0 - _t['Rear']
+        ]
+
+        _vehicle.add_axle(_axle_positions[0], _axle_length, True)
+        _vehicle.add_axle(_axle_positions[1], _axle_length, False)
+        _vehicle.set_minimum_radius(_t['Minimum Radius'])
+
+        return _vehicle
+
     class Axle(Axis):
 
         def __init__(self, axis, length, displacement, is_fixed):
             """
             Axle sublclass to manage wheels
+
+            axis - tuple vector of vehicle body from center
+            displacement - axle distance from center
+            length - axle total length
             """
 
             super().__init__()
@@ -57,11 +110,12 @@ class Vehicle(Body):
 
             self.is_fixed = is_fixed
 
+
     def __init__(self, name, points, center=None, axis=None):
         """
         Constructor
 
-        points - Tuple of 2D float coordinates defining vehicle border
+        points - 2D tuple defining vehicle dimensions (length, width)
         center - The vehicle center as a 2D coordinate tuple
         axis - The axis along which axles are positioned. 2D vector tuple
         """
@@ -224,8 +278,14 @@ class Vehicle(Body):
         #relative to ccw-oriented (left-hand) wheel
         _sign = 1.0 # math.copysign(1.0, angle)
 
+        #get the index of the axle at the rear of the vehicle
+        #(negative distance from the center)
         _back_axle = self.axle_dists.index(min(self.axle_dists))
+
+        #get the axle centerpoint
         _back_center = self.axles[_back_axle].center
+
+        #get the unit orthogonal of the back axle axis
         _back_vector = self.axles[_back_axle].ortho(_sign > 0.0)
 
         self.center = TupleMath.add(
@@ -249,6 +309,8 @@ class Vehicle(Body):
 
             _axle.wheels[0].angle = math.atan(_wheel_angles[0])
             _axle.wheels[1].angle = math.atan(_wheel_angles[1])
+
+        self.angle = angle
 
         return True
 

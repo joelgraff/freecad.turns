@@ -32,18 +32,17 @@ class Body():
     Body model object
     """
 
-    def __init__(self, points, center=None, axis=None):
+    def __init__(self, dimensions, center=None, axis=None):
         """
         Constructor
-        points - Iterable of 2D coordinate tuples for body perimeter
-        A single tuple is defined as (length, width)
+        dimensions - 2D tuple of body dimensions (length, width)
         center - 2D coordinate tuple of body center.  Calulated if None
         axis - 2D vector tuple of body axis.  Calculated if None
         """
 
         self.axis = Axis(vector=axis, center=center)
-        self.points = points
-
+        self.points = None
+        self.dimensions = dimensions
         self.validate()
 
     def validate(self):
@@ -51,19 +50,19 @@ class Body():
         Validates the parameters.
         """
 
-        if isinstance(self.points, tuple) and len(self.points) == 2:
+        _l = self.dimensions[0] / 2.0
+        _w = self.dimensions[1] / 2.0
 
-            if isinstance(self.points[0], float):
+        self.points = ((_l, _w), (-_l, _w), (-_l, -_w), (_l, -_w))
 
-                _l = self.points[0] / 2.0
-                _w = self.points[1] / 2.0
+        _ctr = self.axis.center
 
-                self.points = (
-                    (_l, _w), (-_l, _w), (-_l, -_w), (_l, -_w)
-                )
+        if not _ctr:
+            _ctr = (0.0, 0.0)
 
-        _x_coords = [_p[0] for _p in self.points]
-        _y_coords = [_p[1] for _p in self.points]
+        _x_coords = [_p[0] + _ctr[0] for _p in self.points]
+        _y_coords = [_p[1] + _ctr[1] for _p in self.points]
+
         _fit = self.best_fit(_x_coords, _y_coords)
 
         #Center is calulated as the geometric mean of points, if undefined

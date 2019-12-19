@@ -50,7 +50,7 @@ class EnvelopeTracker(Base):
         """
 
         #initialize wih a separator, then reset to defaults
-        super().__init__(name=name, parent=parent)
+        super().__init__(name=name + '_ENVELOPE', parent=parent)
 
         self.tracks = SimpleNamespace()
         self.tracks.outer_left = []
@@ -110,22 +110,22 @@ class EnvelopeTracker(Base):
 
         for _i, _v in enumerate(self.data.points):
 
-            _pt = _point(_i)
+            #transform the points according to the current vehicle tracker
+            _fn_pt = _point(_i)
+            _pt = _fn_pt()
 
-            _tpl = (_track('outer_' + str(_i), [_pt()]), _pt)
+            _tpl = (_track('outer_' + str(_i), [_pt]), _fn_pt)
 
-            if TupleMath.point_direction(_pt(), _axis) < 0:
+            if TupleMath.point_direction(_pt, _axis) < 0:
                 self.tracks.outer_right.append(_tpl)
 
             else:
                 self.tracks.outer_left.append(_tpl)
 
         for _t in self.tracks.outer_left + self.tracks.outer_right:
-            _t[0].coordinates += _t[0].coordinates
             _t[0].set_style(self.outer_style)
 
         for _t in self.tracks.inner:
-            _t[0].coordinates += _t[0].coordinates
             _t[0].set_style(self.inner_style)
 
     def get_envelope(self, path):
@@ -175,6 +175,7 @@ class EnvelopeTracker(Base):
         """
 
         _pts = self.get_track_points()
+        print('track points', _pts)
         _tracks = []
 
         for _group in _pts[0:2]:
@@ -256,13 +257,20 @@ class EnvelopeTracker(Base):
 
     def reset(self):
         """
-        Reset the envelope track data
+        Reset the envelope tracker coordinates
         """
 
-        for _t in self.tracks.inner \
-                  + self.tracks.outer_left + self.tracks.outer_right:
+        _tracks = self.tracks.inner\
+                + self.tracks.outer_left + self.tracks.outer_right
 
-            _t[0].coordinates = []
+        if not _tracks:
+            return
+
+        _points = [_t[1]() for _t in _tracks]
+        _points = self.transform_points(_points, self.transform_node)
+
+        for _i, _t in enumerate(_tracks):
+            _t[0].reset()
 
     def refresh(self):
         """
@@ -283,10 +291,12 @@ class EnvelopeTracker(Base):
         Cleanup
         """
 
-        for _t in self.tracks.inner\
+        if self.tracks:
+
+            for _t in self.tracks.inner\
                   + self.tracks.outer_left + self.tracks.outer_right:
 
-            _t[0].finish()
+                _t[0].finish()
 
         self.tracks = None
         self.data = None

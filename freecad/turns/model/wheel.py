@@ -42,14 +42,14 @@ class Wheel(Body):
         self.angle = 0.0
         self.center = center
 
-        _top_left = TupleMath.add(center, (-diameter / 2.0, width / 2.0))
+        #_top_left = TupleMath.add(center, (-diameter / 2.0, width / 2.0))
 
-        self.points = [
-            _top_left,
-            TupleMath.add(_top_left, (diameter, 0.0)),
-            TupleMath.add(_top_left, (diameter, -width)),
-            TupleMath.add(_top_left, (0.0, -width)),
-            _top_left
-        ]
+        #self.points = [
+        #    _top_left,
+        #    TupleMath.add(_top_left, (diameter, 0.0)),
+        #    TupleMath.add(_top_left, (diameter, -width)),
+        #    TupleMath.add(_top_left, (0.0, -width)),
+        #    _top_left
+        #]
 
-        super().__init__(self.points)
+        super().__init__([diameter, width], self.center)
