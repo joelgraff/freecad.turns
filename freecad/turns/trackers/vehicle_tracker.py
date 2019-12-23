@@ -124,6 +124,7 @@ class VehicleTracker(GeometryTracker):
             for _wheel in _axle.wheels:
 
                 _pts = [_p + (0.0,) for _p in _wheel.points]
+                _pts.append(_pts[0])
 
                 _lt = LineTracker(
                     _nm.format('wheel', str(len(self.wheels))),

@@ -77,11 +77,11 @@ class Vehicle(Body):
         _axle_length = _t['Width'] - 1.0
         _axle_positions = [
             _t['Length']/2.0 - _t['Front'],
-            _t['Length']/2.0 - _t['Rear']
+            -1 * (_t['Length']/2.0 - _t['Rear'])
         ]
 
-        _vehicle.add_axle(_axle_positions[0], _axle_length, True)
-        _vehicle.add_axle(_axle_positions[1], _axle_length, False)
+        _vehicle.add_axle(_axle_positions[0], _axle_length, False)
+        _vehicle.add_axle(_axle_positions[1], _axle_length, True)
         _vehicle.set_minimum_radius(_t['Minimum Radius'])
 
         return _vehicle
@@ -111,7 +111,7 @@ class Vehicle(Body):
             self.is_fixed = is_fixed
 
 
-    def __init__(self, name, points, center=None, axis=None):
+    def __init__(self, name, dimensions, center=None, axis=None):
         """
         Constructor
 
@@ -120,10 +120,7 @@ class Vehicle(Body):
         axis - The axis along which axles are positioned. 2D vector tuple
         """
 
-        super().__init__(points, center, axis)
-
-        #indices of points which are to be tracked in analysis
-        self.track_idx = range(0, len(points))
+        super().__init__(dimensions, center, axis)
 
         #axle positions along centerline of vehicle
         self.axles = []
@@ -180,9 +177,11 @@ class Vehicle(Body):
         #reference the turning axle and the farthest-back fixed axle
         if not is_fixed:
             self.turn_axle = _axle
+            print('turn axle = ', _axle.center)
 
         else:
             self.fixed_axle = self.axles[self.axle_dists.index(_min_dist)]
+            print('fixed axle = ', _axle.center)
 
     def set_minimum_radius(self, radius):
         """

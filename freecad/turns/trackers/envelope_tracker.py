@@ -143,8 +143,6 @@ class EnvelopeTracker(Base):
         _b = self._build_outer_envelope(_x)
         _t2 = timeit.default_timer() - _t
 
-        print(1.0 / (_t1 + _t2))
-
         return _b
 
     def _build_outer_envelope(self, data):
@@ -175,7 +173,7 @@ class EnvelopeTracker(Base):
         """
 
         _pts = self.get_track_points()
-        print('track points', _pts)
+
         _tracks = []
 
         for _group in _pts[0:2]:

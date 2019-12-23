@@ -38,10 +38,15 @@ class Axis():
         axis - 2D vector tuple
         """
 
+        #center and end points for axis, relative to owning body
         self.center = center
         self.end_points = ()
-        self.vector = ()
+
+        #axis discrete length
         self.length = length
+
+        #unit vector describing axis direction
+        self.vector = ()
         self.set_vector(vector)
 
     def project(self, displacement):

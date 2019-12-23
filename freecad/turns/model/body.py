@@ -53,22 +53,22 @@ class Body():
         _l = self.dimensions[0] / 2.0
         _w = self.dimensions[1] / 2.0
 
-        self.points = ((_l, _w), (-_l, _w), (-_l, -_w), (_l, -_w))
+        _points = ((_l, _w), (-_l, _w), (-_l, -_w), (_l, -_w))
 
         _ctr = self.axis.center
 
         if not _ctr:
             _ctr = (0.0, 0.0)
 
-        _x_coords = [_p[0] + _ctr[0] for _p in self.points]
-        _y_coords = [_p[1] + _ctr[1] for _p in self.points]
+        _x_coords = [_p[0] + _ctr[0] for _p in _points]
+        _y_coords = [_p[1] + _ctr[1] for _p in _points]
 
         _fit = self.best_fit(_x_coords, _y_coords)
 
         #Center is calulated as the geometric mean of points, if undefined
         if not self.axis.center:
 
-            _len = len(self.points)
+            _len = len(_points)
             self.axis.center = (sum(_x_coords) / _len, sum(_y_coords) / _len)
 
         #body orienatation is assumed horizontal with front toward +x,
@@ -79,7 +79,7 @@ class Body():
             self.axis.set_vector((1.0, _fit(1.0)))
 
         #get the x-axis extrema
-        _pts = [min(self.points), max(self.points)]
+        _pts = [min(_points), max(_points)]
 
         #calculate the corresponding extrema along the line of best fit
         _pts = [
@@ -90,6 +90,9 @@ class Body():
         #calculate the corresponding length
         self.length = TupleMath.length(TupleMath.subtract(_pts[1], _pts[0]))
         self.axis.set_length(self.length)
+
+        self.points = [TupleMath.add(_ctr, _p) for _p in _points]
+        #self.points = [TupleMath.add(_ctr, _p) for _p in self.points]
 
     def best_fit(self, x_vals, y_vals):
         """
