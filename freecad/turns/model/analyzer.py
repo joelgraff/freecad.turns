@@ -25,20 +25,6 @@ Swept Path Analysis
 """
 
 from ..support.singleton import Singleton
-from .vehicle import Vehicle
-
-def test():
-
-    _a = Analyzer()
-
-    #_v = Vehicle((8.0, 20.0), 1.0)
-    #_v.add_axle(0.0, 3.0)
-    #_v.add_axle(10.0, 3.0)
-
-    _v = Vehicle.from_template('BUS-40')
-
-    _a.vehicles.append(_v)
-    _a.step()
 
 class Analyzer(metaclass=Singleton):
     """
@@ -54,7 +40,7 @@ class Analyzer(metaclass=Singleton):
         self.vehicles = []
 
         #list of tuples for path coordinates
-        self.path = []
+        self.path = None
 
         #position along path
         self.position = 0.0
@@ -67,10 +53,25 @@ class Analyzer(metaclass=Singleton):
 
         self.set_step(0, True)
 
+    def set_vehicle(self, vehicle):
+        """
+        Set a vehicle
+        """
+
+        for _v in self.vehicles:
+            _v.finish()
+
+        if self.path:
+            vehicle.set_path(self.path)
+
+        self.vehicles = [vehicle]
+
     def set_path(self, path):
         """
         Set the path (a list of tuple coordinates) for vehicles
         """
+
+        self.path = path
 
         for _v in self.vehicles:
             _v.set_path(path)
