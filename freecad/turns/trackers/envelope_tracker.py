@@ -264,9 +264,6 @@ class EnvelopeTracker(Base):
         if not _tracks:
             return
 
-        _points = [_t[1]() for _t in _tracks]
-        _points = self.transform_points(_points, self.transform_node)
-
         for _i, _t in enumerate(_tracks):
             _t[0].reset()
 
@@ -299,3 +296,5 @@ class EnvelopeTracker(Base):
         self.tracks = None
         self.data = None
         self.transform_node = None
+
+        super().finish()

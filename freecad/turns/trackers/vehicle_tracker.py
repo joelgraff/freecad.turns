@@ -211,3 +211,5 @@ class VehicleTracker(GeometryTracker):
         if self.radius_tracker:
             self.radius_tracker.finish()
             self.radius_tracker = []
+
+        super().finish()
