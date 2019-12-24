@@ -35,6 +35,7 @@ from .. import resources
 
 from ..commands.path_editor_command import PathEditorCommand
 from ..trackers.analysis_tracker import AnalysisTracker
+from ..model.vehicle import Vehicle
 
 from .base_task import BaseTask
 
@@ -68,6 +69,7 @@ class TestVehicleTask(BaseTask):
             'create_path_button': ('clicked', self.fr_create_edit_path, None),
             'edit_path_button': ('clicked', self.fr_create_edit_path, None),
             'path_combo': ('currentIndexChanged', self.fr_path, None),
+            'type_combo': ('currentIndexChanged', self.fr_type, None),
 
             'max_steps_edit': ('editingFinished', self.fr_max_steps, None),
 
@@ -81,10 +83,11 @@ class TestVehicleTask(BaseTask):
 
             'back_button': ('clicked', self.fr_step_back, None),
             'play_button': ('clicked', self.fr_play, None),
-            'forward_button': ('clicked', self.fr_step_forward, None)
+            'stop_button': ('clicked', self.fr_stop, None)
         }
 
         self.is_playing = False
+
         self.tracker = AnalysisTracker()
         self.tracker.insert_into_scenegraph()
 
@@ -104,13 +107,13 @@ class TestVehicleTask(BaseTask):
 
         #button references
         _play = self.widgets.play_button
-        _forward = self.widgets.forward_button
+        _stop = self.widgets.stop_button
         _back = self.widgets.back_button
 
         #button icons
         _play.setIcon(_play.style().standardIcon(QStyle.SP_MediaPlay))
-        _forward.setIcon(
-            _forward.style().standardIcon(QStyle.SP_MediaSeekForward))
+        _stop.setIcon(
+            _stop.style().standardIcon(QStyle.SP_MediaStop))
 
         _back.setIcon(_back.style().standardIcon(QStyle.SP_MediaSeekBackward))
 
@@ -128,12 +131,11 @@ class TestVehicleTask(BaseTask):
         self.widgets.cur_step_edit.setInputMask("999")
         self.tracker.set_step(int(self.widgets.cur_step_edit.text()))
 
-        #set the vehicle data in the UI
-        self.widgets.length_edit.setText(
-            str(self.tracker.analyzer.vehicles[0].dimensions[0]))
+        #populate the vehicle type combo
+        for _k, _v in Vehicle.templates.items():
+            self.widgets.type_combo.addItem('{} ({})'.format(_k, _v['Type']))
 
-        self.widgets.width_edit.setText(
-            str(self.tracker.analyzer.vehicles[0].dimensions[1]))
+        self.widgets.type_combo.setCurrentIndex(0)
 
     def fr_loop_checkbox(self, value):
         """
@@ -161,6 +163,23 @@ class TestVehicleTask(BaseTask):
             value *= 5
 
         self.tracker.set_animation_speed(value)
+
+    def fr_type(self, value):
+        """
+        Callback for vehicle type combobox (currentIndexChanged)
+        """
+
+        _symbol = self.widgets.type_combo.currentText()
+        _symbol = _symbol.split('(')[0].rstrip()
+
+        self.tracker.set_vehicle(_symbol)
+
+        #set the vehicle data in the UI
+        self.widgets.length_edit.setText(
+            str(self.tracker.analyzer.vehicles[0].dimensions[0]))
+
+        self.widgets.width_edit.setText(
+            str(self.tracker.analyzer.vehicles[0].dimensions[1]))
 
     def fr_path(self, value):
         """
@@ -215,6 +234,22 @@ class TestVehicleTask(BaseTask):
 
         self.widgets.cur_step_edit.setText('{}'.format(str(value)))
 
+    def fr_stop(self):
+        """
+        Stop and reset the playback
+        """
+
+        if not self.is_playing:
+            return
+
+        self.is_playing = False
+
+        _play = self.widgets.play_button
+        _play.setIcon(_play.style().standardIcon(QStyle.SP_MediaPlay))
+
+        self.tracker.stop_animation()
+        self.tracker.reset()
+
     def fr_step_forward(self):
         """
         Step forward callback
@@ -237,11 +272,11 @@ class TestVehicleTask(BaseTask):
         _icon = QStyle.SP_MediaPlay
 
         if self.is_playing:
-            self.tracker.stop_animation()
+            self.tracker.pause_animation()
 
         else:
             self.tracker.start_animation()
-            _icon = QStyle.SP_MediaStop
+            _icon = QStyle.SP_MediaPause
 
         self.is_playing = not self.is_playing
 

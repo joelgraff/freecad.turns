@@ -65,7 +65,7 @@ class AnalysisTracker(ContextTracker, Timer):
         )
 
         self.steps = 100
-        self.vehicles = {}
+        self.vehicles = []
         self.envelopes = {}
         self.path = None
         self.tracker = None
@@ -99,15 +99,6 @@ class AnalysisTracker(ContextTracker, Timer):
         """
 
         _analyzer = Analyzer()
-
-        _v = Vehicle.from_template('P')
-
-        #_v = Vehicle('car.1', (19.0, 7.0))
-        #_v.add_axle(6.5, 6.0, False)
-        #_v.add_axle(-4.5, 6.0)
-        #_v.set_minimum_radius(24.0)
-
-        _analyzer.vehicles.append(_v)
         _analyzer.set_step(0, True)
 
         return _analyzer
@@ -124,24 +115,48 @@ class AnalysisTracker(ContextTracker, Timer):
 
         super().on_insert()
 
-    def add_vehicle(self, vehicle):
+    def set_vehicle(self, vehicle_symbol):
         """
         Add a vehicle tracker as described by the Vehicle model object
         """
 
-        _idx = str(len(self.vehicles))
-        _v = VehicleTracker(name=vehicle.name, data=vehicle, parent=self.base)
+        for _v in self.vehicles:
+            _v.finish()
 
-        self.vehicles[vehicle.name] = _v
+        self.vehicles = []
+        self.add_vehicle(vehicle_symbol)
+
+    def add_vehicle(self, vehicle_symbol):
+        """
+        Add a vehicle tracker as described by the Vehicle model object
+        """
+
+        #create and add the vehicle model data to the analyzer list
+        _model = Vehicle.from_template(vehicle_symbol)
+        self.analyzer.set_vehicle(_model)
+
+        #create amd add the vehicle tracker data to the tracker list
+        _tracker = VehicleTracker(
+            name=_model.name, data=_model, parent=self.base)
+
+        self.vehicles.append(_tracker)
 
     def start_animation(self):
         """
         Start the animation timer
         """
 
-        todo.delay(self.build_envelopes, None)
+        if not self.envelopes:
+            todo.delay(self.build_envelopes, None)
 
         self.start_timer('analysis_animator')
+
+    def pause_animation(self):
+        """
+        Pause the animation timer
+        """
+
+        self.stop_timer('analysis_animator')
 
     def stop_animation(self):
         """
@@ -149,9 +164,7 @@ class AnalysisTracker(ContextTracker, Timer):
         """
 
         self.stop_timer('analysis_animator')
-
-        for _v in self.vehicles.values():
-            _v.envelope.reset()
+        self.reset_animation()
 
         #for _e in self.envelopes.values():
         #    _result = _e.get_envelope(self.path)
@@ -163,6 +176,16 @@ class AnalysisTracker(ContextTracker, Timer):
         #self.tracker.set_style(Style.ERROR)
         #self.tracker.update(_c, _g, notify=False)
         #self.tracker.show_markers()
+
+    def reset_animation(self):
+        """
+        Reset the animation
+        """
+
+        for _v in self.vehicles:
+            _v.envelope.reset()
+
+        self.set_step(0)
 
     def set_animation_speed(self, value):
         """
@@ -191,7 +214,7 @@ class AnalysisTracker(ContextTracker, Timer):
                     self.stop_animation()
                     return
 
-                self.reset()
+                self.reset_animation()
 
         self.analyzer.step()
         self.refresh()
@@ -217,7 +240,7 @@ class AnalysisTracker(ContextTracker, Timer):
         Refresh the vehicles in the tracker based on state changes
         """
 
-        for _i, _v  in self.vehicles.items():
+        for _v  in self.vehicles:
             _v.refresh()
 
     def set_max_steps(self, steps):
@@ -252,7 +275,7 @@ class AnalysisTracker(ContextTracker, Timer):
         self.path = Path(geometry, self.steps)
         self.analyzer.set_path(self.path)
 
-        for _v in self.vehicles.values():
+        for _v in self.vehicles:
             _v.refresh()
             _v.envelope.reset()
 
@@ -264,7 +287,7 @@ class AnalysisTracker(ContextTracker, Timer):
         if self.analyzer:
             self.analyzer.finish()
 
-        for _v in self.vehicles.values():
+        for _v in self.vehicles:
             _v.finish()
 
         for _e in self.envelopes.values():

@@ -43,26 +43,34 @@ class Vehicle(Body):
     templates = {}
 
     @staticmethod
+    def populate_templates():
+        """
+        Static method to populate the vehicle templates dict from json
+        """
+
+        if Vehicle.templates:
+            return
+
+        _fp = os.path.abspath(os.path.dirname(__file__))\
+            + '/vehicle_templates.json'
+
+        _db = json.load(open(_fp, 'r'))['vehicles']
+
+        for _veh in _db:
+
+            _key = _veh['Symbol']
+
+            if isinstance(_key, list):
+                _key = _key[0]
+
+            Vehicle.templates[_key] = _veh
+
+
+    @staticmethod
     def from_template(symbol, name=None):
         """
         Create a new vehicle object from a template
         """
-
-        if not Vehicle.templates:
-
-            _fp = os.path.abspath(os.path.dirname(__file__))\
-                + '/vehicle_templates.json'
-
-            _db = json.load(open(_fp, 'r'))['vehicles']
-
-            for _veh in _db:
-
-                _key = _veh['Symbol']
-
-                if isinstance(_key, list):
-                    _key = _key[0]
-
-                Vehicle.templates[_key] = _veh
 
         assert (symbol in Vehicle.templates),\
             'Template "{}" undefined'.format(symbol)
@@ -322,6 +330,10 @@ class Vehicle(Body):
             _a.finish()
 
         super().finish()
+
+#populate Vhecile.templates when module is first loaded
+if not Vehicle.templates:
+    Vehicle.populate_templates()
 
 # INPUTS
 #
