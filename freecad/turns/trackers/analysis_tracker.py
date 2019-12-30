@@ -30,7 +30,8 @@ from types import SimpleNamespace
 import FreeCADGui as Gui
 
 from pivy_trackers.support.todo import todo
-from pivy_trackers.coin.coin_styles import CoinStyles as Style
+
+from pivy_trackers.coin.coin_styles import CoinStyles as Styles
 from pivy_trackers.trait.timer import Timer
 from pivy_trackers.tracker.context_tracker import ContextTracker
 from pivy_trackers.tracker.line_tracker import LineTracker
@@ -85,7 +86,7 @@ class AnalysisTracker(ContextTracker, Timer):
 
         self.set_visibility()
 
-    def build_envelopes(self):
+    def build_envelope_tracker(self):
         """
         Build envelope trackers
         """
@@ -146,9 +147,10 @@ class AnalysisTracker(ContextTracker, Timer):
         Start the animation timer
         """
 
-        if not self.envelopes:
-            todo.delay(self.build_envelopes, None)
+        if not self.tracker:
+            todo.delay(self.build_envelope_tracker, None)
 
+        self.reset_animation()
         self.start_timer('analysis_animator')
 
     def pause_animation(self):
@@ -164,18 +166,20 @@ class AnalysisTracker(ContextTracker, Timer):
         """
 
         self.stop_timer('analysis_animator')
-        self.reset_animation()
 
-        #for _e in self.envelopes.values():
-        #    _result = _e.get_envelope(self.path)
-        #    break
+        _result = None
 
-        #_c = [_v[0] for _v in _result[0]] + [_v[0] for _v in _result[1]]
-        #_g = [len(_result[0]), len(_result[1])]
+        for _v in self.vehicles:
+            _result  = _v.envelope.get_envelope(self.path)
+            break
 
-        #self.tracker.set_style(Style.ERROR)
-        #self.tracker.update(_c, _g, notify=False)
-        #self.tracker.show_markers()
+        _c = [_v[0] for _v in _result[0]] + [_v[0] for _v in _result[1]]
+        _g = [len(_result[0]), len(_result[1])]
+
+        self.tracker.set_style(Styles.ERROR)
+        self.tracker.set_visibility()
+        self.tracker.update(_c, _g, notify=False)
+        self.tracker.show_markers()
 
     def reset_animation(self):
         """
@@ -186,6 +190,13 @@ class AnalysisTracker(ContextTracker, Timer):
             _v.envelope.reset()
 
         self.set_step(0)
+
+        if not self.tracker:
+            todo.delay(self.build_envelope_tracker, None)
+            return
+
+        self.tracker.reset()
+        self.tracker.set_visibility(False)
 
     def set_animation_speed(self, value):
         """
@@ -222,19 +233,6 @@ class AnalysisTracker(ContextTracker, Timer):
         self.to_radius(self.analyzer.vehicles[0].radius)
         self.to_angle(self.analyzer.vehicles[0].angle)
 
-    def reset(self):
-        """
-        Reset the envelope tracker
-        """
-
-        if not self.is_inserted:
-            return
-
-        for _e in self.envelopes.values():
-            self.base.remove_node(_e.root)
-
-        self.envelopes = {}
-
     def refresh(self):
         """
         Refresh the vehicles in the tracker based on state changes
@@ -270,7 +268,7 @@ class AnalysisTracker(ContextTracker, Timer):
         """
 
         if self.is_inserted:
-            self.reset()
+            self.reset_animation()
 
         self.path = Path(geometry, self.steps)
         self.analyzer.set_path(self.path)
@@ -289,8 +287,5 @@ class AnalysisTracker(ContextTracker, Timer):
 
         for _v in self.vehicles:
             _v.finish()
-
-        for _e in self.envelopes.values():
-            _e.finish()
 
         super().finish()

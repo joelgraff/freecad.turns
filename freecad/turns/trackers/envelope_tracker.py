@@ -72,9 +72,13 @@ class EnvelopeTracker(Base):
         """
 
         return (
-            [_t[0].coordinates for _t in self.tracks.outer_left],
-            [_t[0].coordinates for _t in self.tracks.outer_right],
-            [_t[0].coordinates for _t in self.tracks.inner]
+            [_t[0].coordinates for _t in \
+                self.tracks.outer_left + self.tracks.inner[0:2]],
+
+            [_t[0].coordinates for _t in \
+                self.tracks.outer_right + self.tracks.inner[2:4]],
+
+            [_t[0].coordinates for _t in self.tracks.inner[4:]]
         )
 
     def _build_envelope_tracks(self):
@@ -99,11 +103,11 @@ class EnvelopeTracker(Base):
 
         self.tracks.inner = [
             (_track('front_left', [_wheel(0, 0)()], self.base), _wheel(0, 0)),
-            (_track('front_center', [_axle(0)()], self.base), _axle(0)),
-            (_track('front_right', [_wheel(0, 1)()], self.base), _wheel(0, 1)),
             (_track('rear_left', [_wheel(1, 0)()], self.base), _wheel(1, 0)),
+            (_track('front_right', [_wheel(0, 1)()], self.base), _wheel(0, 1)),
+            (_track('rear_right', [_wheel(1, 1)()], self.base), _wheel(1, 1)),
+            (_track('front_center', [_axle(0)()], self.base), _axle(0)),
             (_track('rear_center', [_axle(1)()], self.base), _axle(1)),
-            (_track('rear_right', [_wheel(1, 1)()], self.base), _wheel(1, 1))
         ]
 
         _axis = self.data.axis.vector + (0.0,)
@@ -150,8 +154,8 @@ class EnvelopeTracker(Base):
         Build the outer envelope
         """
 
-        _outer_points = [data[0][0], data[1][0]]
-        _other_points = [data[0][1:], data[1][1:]]
+        _outer_points = [_v[0] for _v in data]
+        _other_points = [_v[1:] for _v in data]
 
         #iterate each side
         for _j, _side in enumerate(_other_points):
@@ -176,10 +180,13 @@ class EnvelopeTracker(Base):
 
         _tracks = []
 
-        for _group in _pts[0:2]:
+        #there are three 'groups': left, right, and center tracks
+        for _group in _pts:
 
             _seg_group = []
 
+            #iterate the points in each group, building segments
+            #and storing the results.
             for _points in _group:
 
                 _segments = [
@@ -194,7 +201,7 @@ class EnvelopeTracker(Base):
         _null_ortho = LineSegment((0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
         _result = []
 
-        for _i, _s in enumerate(_tracks):
+        for _i, _s in enumerate(_tracks[0:2]):
             _result.append([])
 
             for _j, _t in enumerate(_s):
@@ -207,28 +214,39 @@ class EnvelopeTracker(Base):
             _prev = path.segments[_i]
 
             _lt = TupleMath.scale(TupleMath.ortho(_prev.tangent), 10)
+
+            #tangent / orthogonal pair
             _o_segs = [_lt, TupleMath.scale(_lt, -1.0)]
+
+            #calculate end point for unit-length tangent and orthogonal
             _o_segs = [TupleMath.add(_prev.position, _v) for _v in _o_segs]
             _o_segs = [LineSegment(_prev.position, _v) for _v in _o_segs]
 
             _pt = _prev.position
 
             #iterate left and right sides
-            for _j, _side in enumerate(_tracks):
+            for _j, _side in enumerate(_tracks[0:2]):
 
                 #iterate each track on the side
                 for _k, _track in enumerate(_side):
 
                     _pt_int = (_pt, 0.0)
-                    _first_track = _track[0]
+
+                    _segments = _track[0]
 
                     #iterate each segment in the track
                     for _l in range(_track[1], _track[2]):
 
-                        _seg = _first_track[_l]
+                        #pick the current segment from the track 
+                        #and save it's manhattan distance from the path
+                        _seg = _segments[_l]
+
                         _int = _o_segs[_j].is_intersecting(_seg)
                         _dist = TupleMath.manhattan(_int[1], _pt)
 
+                        #if the segment intersects the orthogonal,
+                        #save the intersection constants and distance
+                        #and save the segment starting position
                         if _int[0]:
                             _pt_int = (_int[1], _dist)
                             _track[1] = _l + 1
@@ -240,7 +258,7 @@ class EnvelopeTracker(Base):
                             if _int[2][1] >= 0.0 or _l < 0:
                                 continue
 
-                            _seg = _first_track[_l - 1]
+                            _seg = _segments[_l - 1]
                             _int = _o_segs[_j].is_intersecting(_seg)
                             _dist = TupleMath.manhattan(_int[1], _pt)
 
@@ -249,6 +267,7 @@ class EnvelopeTracker(Base):
                                 _track[1] = _l + 1
                                 break
 
+                    #save the intersection data
                     _result[_j][_k].append(_pt_int)
 
         return _result

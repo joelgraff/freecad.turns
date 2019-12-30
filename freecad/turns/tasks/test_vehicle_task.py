@@ -248,7 +248,6 @@ class TestVehicleTask(BaseTask):
         _play.setIcon(_play.style().standardIcon(QStyle.SP_MediaPlay))
 
         self.tracker.stop_animation()
-        self.tracker.reset()
 
     def fr_step_forward(self):
         """
@@ -275,6 +274,7 @@ class TestVehicleTask(BaseTask):
             self.tracker.pause_animation()
 
         else:
+            self.tracker.reset_animation()
             self.tracker.start_animation()
             _icon = QStyle.SP_MediaPause
 

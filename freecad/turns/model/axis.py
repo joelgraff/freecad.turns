@@ -82,9 +82,10 @@ class Axis():
 
         _half_vector = TupleMath.scale(self.vector, self.length/2.0)
 
+        #set left (ccw) and right (cw) end points, respectively...
         self.end_points = (
-            TupleMath.subtract(self.center, _half_vector),
-            TupleMath.add(self.center, _half_vector)
+            TupleMath.add(self.center, _half_vector),
+            TupleMath.subtract(self.center, _half_vector)
         )
 
     def ortho(self, is_ccw=True):
