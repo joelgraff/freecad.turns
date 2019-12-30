@@ -22,7 +22,7 @@
 #***********************************************************************
 
 """
-Swept path analysis task
+Create / edit vehicle templates
 """
 
 import FreeCAD as App
@@ -33,13 +33,11 @@ import FreeCADGui as Gui
 
 from .. import resources
 
-from ..commands.path_editor_command import PathEditorCommand
-from ..trackers.analysis_tracker import AnalysisTracker
 from ..model.vehicle import Vehicle
 
 from .base_task import BaseTask
 
-class AnalysisTask(BaseTask):
+class VehicleTemplateTask(BaseTask):
     """
     Swept path analysis task
     """
@@ -48,11 +46,11 @@ class AnalysisTask(BaseTask):
         """
         Constructor
         """
-
         self.name = 'SweptPathAnalysisTask'
 
+        return
         #initialize the inherited base class
-        super().__init__(resources.__path__[0] + '/analysis.ui')
+        super().__init__(resources.__path__[0] + '/test_vehicle.ui')
 
         #Initialize state that will be global to the task here
         self.view = Gui.ActiveDocument.ActiveView
@@ -101,6 +99,8 @@ class AnalysisTask(BaseTask):
 
         super().setup_ui()
 
+        return
+        
         #set callbacks for tracker to update UI
         self.tracker.to_step = self.to_cur_step
         self.tracker.to_radius = self.to_cur_radius
@@ -137,183 +137,3 @@ class AnalysisTask(BaseTask):
             self.widgets.type_combo.addItem('{} ({})'.format(_k, _v['Type']))
 
         self.widgets.type_combo.setCurrentIndex(0)
-
-    def fr_loop_checkbox(self, value):
-        """
-        Callback for loop checkbox state
-        """
-
-        self.tracker.set_animation_loop(self.widgets.loop_checkbox.isChecked())
-
-    def fr_create_edit_path(self):
-        """
-        Edit an existing sketch path
-        """
-
-        self.path_editor.Activated()
-
-    def fr_speed_slider(self, value):
-        """
-        Callback for changes to the animation slider position
-        """
-
-        if not value:
-            value = 1
-
-        else:
-            value *= 5
-
-        self.tracker.set_animation_speed(value)
-
-    def fr_type(self, value):
-        """
-        Callback for vehicle type combobox (currentIndexChanged)
-        """
-
-        _symbol = self.widgets.type_combo.currentText()
-        _symbol = _symbol.split('(')[0].rstrip()
-
-        self.tracker.set_vehicle(_symbol)
-
-        #set the vehicle data in the UI
-        self.widgets.length_edit.setText(
-            str(self.tracker.analyzer.vehicles[0].dimensions[0]))
-
-        self.widgets.width_edit.setText(
-            str(self.tracker.analyzer.vehicles[0].dimensions[1]))
-
-    def fr_path(self, value):
-        """
-        Callback for path combobox (currentIndexChanged)
-        """
-
-        _name = self.widgets.path_combo.currentText()
-
-        if not _name:
-            return
-
-        Gui.Selection.clearSelection()
-
-        _sketch = App.ActiveDocument.getObject(_name)
-
-        if not _sketch:
-            return
-
-        Gui.Selection.addSelection(_sketch)
-
-        self.tracker.set_path(_sketch.Geometry)
-
-    def to_cur_angle(self, value):
-        """
-        Callback for vehicle steering angle update
-        """
-
-        self.widgets.cur_angle_edit.setText('{:12.2f}'.format(value))
-
-    def to_cur_radius(self, value):
-        """
-        Callback for vehicle radius
-        """
-
-        self.widgets.cur_radius_edit.setText('{:12.2f}'.format(value))
-
-    def fr_max_steps(self, value):
-        """
-        Callback for maximum steps line edit
-        """
-
-        self.tracker.set_max_steps('{:12.2f}'.format(value))
-
-    def fr_cur_step(self, value):
-        """
-        Callback for current step line edit
-        """
-
-        self.tracker.set_step(int(value))
-
-    def to_cur_step(self, value):
-
-        self.widgets.cur_step_edit.setText('{}'.format(str(value)))
-
-    def fr_stop(self):
-        """
-        Stop and reset the playback
-        """
-
-        if not self.is_playing:
-            return
-
-        self.is_playing = False
-
-        _play = self.widgets.play_button
-        _play.setIcon(_play.style().standardIcon(QStyle.SP_MediaPlay))
-
-        self.tracker.stop_animation()
-
-    def fr_step_forward(self):
-        """
-        Step forward callback
-        """
-
-        self.tracker.move_step(1)
-
-    def fr_step_back(self):
-        """
-        Step backward callback
-        """
-
-        self.tracker.move_step(-1)
-
-    def fr_play(self):
-        """
-        Play simulation callback
-        """
-
-        _icon = QStyle.SP_MediaPlay
-
-        if self.is_playing:
-            self.tracker.pause_animation()
-
-        else:
-            self.tracker.reset_animation()
-            self.tracker.start_animation()
-            _icon = QStyle.SP_MediaPause
-
-        self.is_playing = not self.is_playing
-
-        _play = self.widgets.play_button
-        _play.setIcon(_play.style().standardIcon(_icon))
-
-    def to_length_edit(self, value):
-        """
-        Update the length UI edit with the selected vehicle data
-        """
-
-        self.widgets.length_edit.setText(str(value))
-
-    def to_width_edit(self, value):
-        """
-        Update the width UI edit with the selected vehicle data
-        """
-
-        self.widgets.width_edit.setText(str(value))
-
-    def accept(self):
-        """
-        Overrides base implementation (optional)
-        """
-
-        self.tracker.finish()
-        self.tracker = None
-
-        super().accept()
-
-    def reject(self):
-        """
-        Overrides base implementation (optional)
-        """
-
-        self.tracker.finish()
-        self.tracker = None
-
-        super().reject()
