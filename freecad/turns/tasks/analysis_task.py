@@ -22,7 +22,7 @@
 #***********************************************************************
 
 """
-Example task template
+Swept path analysis task
 """
 
 import FreeCAD as App
@@ -39,9 +39,9 @@ from ..model.vehicle import Vehicle
 
 from .base_task import BaseTask
 
-class TestVehicleTask(BaseTask):
+class AnalysisTask(BaseTask):
     """
-    Test vehicle task template
+    Swept path analysis task
     """
 
     def __init__(self):
@@ -49,7 +49,7 @@ class TestVehicleTask(BaseTask):
         Constructor
         """
 
-        self.name = 'TestVheicleTask'
+        self.name = 'SweptPathAnalysisTask'
         #initialize the inherited base class
         super().__init__(resources.__path__[0] + '/test_vehicle.ui')
 

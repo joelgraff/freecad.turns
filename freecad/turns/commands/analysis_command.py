@@ -21,7 +21,7 @@
 #*                                                                     *
 #***********************************************************************
 """
-Example Command
+Analysis Command
 """
 import os
 
@@ -30,11 +30,11 @@ import FreeCADGui as Gui
 
 from freecad.turns import ICONPATH
 
-from ..tasks.test_vehicle_task import TestVehicleTask
+from ..tasks.analysis_task import AnalysisTask
 
-class TestVehicleCommand():
+class AnalysisCommand():
     """
-    Example Command
+    Analysis Command
     """
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -45,8 +45,8 @@ class TestVehicleCommand():
     resources = {
         'Pixmap'  : os.path.join(ICONPATH, "template_resource.svg"),
         'Accel'   : "Shift+1",
-        'MenuText': "TestVehicle",
-        'ToolTip' : "Test Vehicle Command",
+        'MenuText': "Swept Path Analysus",
+        'ToolTip' : "Perform swept-path analysis",
         'CmdType' : "ForEdit"
     }
 
@@ -61,7 +61,7 @@ class TestVehicleCommand():
         Activation callback
         """
 
-        _task = TestVehicleTask()
+        _task = AnalysisTask()
         Gui.Control.showDialog(_task)
         _task.setup_ui()
 
@@ -80,4 +80,4 @@ class TestVehicleCommand():
 
         return App.ActiveDocument is not None
 
-Gui.addCommand('TestVehicleCommand', TestVehicleCommand())
+Gui.addCommand('AnalysisCommand', AnalysisCommand())
