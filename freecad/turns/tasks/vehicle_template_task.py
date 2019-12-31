@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 #***********************************************************************
-#*                                                                     *
 #* Copyright (c) 2019 Joel Graff <monograff76@gmail.com>               *
 #*                                                                     *
 #* This program is free software; you can redistribute it and/or modify*
@@ -46,15 +45,15 @@ class VehicleTemplateTask(BaseTask):
         """
         Constructor
         """
-        self.name = 'SweptPathAnalysisTask'
+        self.name = 'VehicleTemplateTask'
 
-        return
         #initialize the inherited base class
-        super().__init__(resources.__path__[0] + '/test_vehicle.ui')
+        super().__init__(resources.__path__[0] + '/vehicle_template.ui')
 
         #Initialize state that will be global to the task here
         self.view = Gui.ActiveDocument.ActiveView
-        self.path_editor = PathEditorCommand()
+
+        return
 
         # define the widget signalling data tuples as:
         #(widget_name, widget_signal_name, callback)
@@ -85,8 +84,6 @@ class VehicleTemplateTask(BaseTask):
             'stop_button': ('clicked', self.fr_stop, None)
         }
 
-        self.is_playing = False
-
         self.tracker = AnalysisTracker()
         self.tracker.insert_into_scenegraph()
 
@@ -100,7 +97,7 @@ class VehicleTemplateTask(BaseTask):
         super().setup_ui()
 
         return
-        
+
         #set callbacks for tracker to update UI
         self.tracker.to_step = self.to_cur_step
         self.tracker.to_radius = self.to_cur_radius
