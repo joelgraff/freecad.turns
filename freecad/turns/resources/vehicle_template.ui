@@ -33,7 +33,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0">
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_7" stretch="0,0,0,0,1">
+       <layout class="QVBoxLayout" name="vl_panel" stretch="0,0,0,0,1">
         <item>
          <layout class="QHBoxLayout" name="hl_metadata_header" stretch="0">
           <item>
@@ -257,12 +257,12 @@
                 <item>
                  <widget class="QLabel" name="label_pivot">
                   <property name="text">
-                   <string>Height</string>
+                   <string>Pivot Offset</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="edit_pivot">
+                 <widget class="QLineEdit" name="edit_pivot_offset">
                   <property name="maximumSize">
                    <size>
                     <width>50</width>

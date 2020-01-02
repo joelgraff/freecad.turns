@@ -34,6 +34,8 @@ from .. import resources
 
 from ..model.vehicle import Vehicle
 
+from ..trackers.vehicle_template_tracker import VehicleTemplateTracker
+
 from .base_task import BaseTask
 
 class VehicleTemplateTask(BaseTask):
@@ -53,38 +55,53 @@ class VehicleTemplateTask(BaseTask):
         #Initialize state that will be global to the task here
         self.view = Gui.ActiveDocument.ActiveView
 
-        return
-
         # define the widget signalling data tuples as:
         #(widget_name, widget_signal_name, callback)
         self.widget_callbacks = {
 
-            'loop_checkbox': ('stateChanged', self.fr_loop_checkbox, None),
+            'edit_vehicle_type': (
+                'editingFinished', self.fr_edit_vehicle_type, None),
 
-            'animation_speed_slider':\
-                ('valueChanged', self.fr_speed_slider, None),
+            'edit_vehicle_description':\
+                ('editingFinished', self.fr_edit_vehicle_description, None),
 
-            'create_path_button': ('clicked', self.fr_create_edit_path, None),
-            'edit_path_button': ('clicked', self.fr_create_edit_path, None),
-            'path_combo': ('currentIndexChanged', self.fr_path, None),
-            'type_combo': ('currentIndexChanged', self.fr_type, None),
+            'edit_length': (
+                'editingFinished', self.fr_edit_length, self.to_edit_length),
 
-            'max_steps_edit': ('editingFinished', self.fr_max_steps, None),
+            'edit_width': (
+                'editingFinished', self.fr_edit_width, self.to_edit_width),
 
-            'cur_step_edit':\
-                ('editingFinished', self.fr_cur_step, self.to_cur_step),
+            'edit_height': (
+                'editingFinished', self.fr_edit_height, self.to_edit_height),
 
-            'length_edit': ('', None, self.to_length_edit),
-            'width_edit': ('', None, self.to_width_edit),
-            'cur_angle_edit': ('', None, self.to_cur_angle),
-            'cur_radius_edit': ('', None, self.to_cur_radius),
+            'edit_min_radius': (
+                'editingFinished', self.fr_edit_min_radius, None),
 
-            'back_button': ('clicked', self.fr_step_back, None),
-            'play_button': ('clicked', self.fr_play, None),
-            'stop_button': ('clicked', self.fr_stop, None)
+            'edit_max_angle': ('editingFinished', self.fr_edit_max_angle),
+
+            'edit_pivot_offset': ('editingFinished',
+                self.fr_edit_pivot_offset, self.to_edit_pivot_offset),
+
+            'spin_axle_count': ('valueChanged', self.fr_spin_axle_count, None),
+
+            'spin_axle_count_2': (
+                'valueChanged', self.fr_spin_axle_count_2, None),
+
+            'edit_axle_spacing': (
+                'editingFinished', self.fr_edit_axle_spacing, None),
+
+            'edit_axle_spacing_2': (
+                'editingFinished', self.fr_edit_axle_spacing_2, None),
+
+            'edit_axle_offset': ('editingFinished',
+                self.fr_edit_axle_offset, self.to_edit_axle_offset),
+
+            'edit_axle_offset_2': ('editingFinished',
+                self.fr_edit_axle_offset_2, self.to_edit_axle_offset_2)
+
         }
 
-        self.tracker = AnalysisTracker()
+        self.tracker = VehicleTemplateTracker(None)
         self.tracker.insert_into_scenegraph()
 
     def setup_ui(self):
@@ -134,3 +151,108 @@ class VehicleTemplateTask(BaseTask):
             self.widgets.type_combo.addItem('{} ({})'.format(_k, _v['Type']))
 
         self.widgets.type_combo.setCurrentIndex(0)
+
+    def fr_edit_vehicle_type(self, value):
+        """
+        Update from form control
+        """
+
+    def fr_edit_vehicle_description(self, value):
+        """
+        Update from form control
+        """
+
+    def fr_edit_length(self, value):
+        """
+        Update from form control
+        """
+
+    def to_edit_length(self, value):
+        """
+        Update to form control
+        """
+
+    def fr_edit_width(self, value):
+        """
+        Update from form control
+        """
+
+    def to_edit_width(self, value):
+        """
+        Update to form control
+        """
+
+    def fr_edit_height(self, value):
+        """
+        Update from form control
+        """
+
+    def to_edit_height(self, value):
+        """
+        Update to form control
+        """
+
+    def fr_edit_min_radius(self, value):
+        """
+        Update from form control
+        """
+
+    def fr_edit_max_angle(self, value):
+        """
+        Update from form control
+        """
+
+    def fr_edit_pivot_offset(self, value):
+        """
+        Update from form control
+        """
+
+    def to_edit_pivot_offset(self, value):
+        """
+        Update to form control
+        """
+
+    def fr_spin_axle_count(self, value):
+        """
+        Update from form control
+        """
+
+    def fr_spin_axle_count_2(self, value):
+        """
+        Update from form control
+        """
+
+    def fr_edit_axle_spacing(self, value):
+        """
+        Update from form control
+        """
+
+    def fr_edit_axle_spacing_2(self, value):
+        """
+        Update from form control
+        """
+
+    def fr_edit_axle_offset(self, value):
+        """
+        Update from form control
+        """
+
+    def to_edit_axle_offset(self, value):
+        """
+        Update to form control
+        """
+
+    def to_edit_axle_offset_2(self, value):
+        """
+        Update to form control
+        """
+
+    def fr_edit_axle_offset_2(self, value):
+        """
+        Update from form control
+        """
+
+    def to_edit_axle_offset_2(self, value):
+        """
+        Update to form control
+        """
