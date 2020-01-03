@@ -102,7 +102,7 @@ class VehicleTemplateTask(BaseTask):
         }
 
         self.tracker = VehicleTemplateTracker(None)
-        self.tracker.insert_into_scenegraph()
+        self.tracker.insert_into_scenegraph(True)
 
     def setup_ui(self):
         """

@@ -28,8 +28,10 @@ from types import SimpleNamespace
 
 import FreeCADGui as Gui
 
+from pivy_trackers.trait.drag import Drag
+from pivy_trackers.trait.select import Select
+
 from pivy_trackers.tracker.context_tracker import ContextTracker
-from pivy_trackers.tracker.empty_tracker import EmptyTracker
 from pivy_trackers.tracker.box_tracker import BoxTracker
 from pivy_trackers.tracker.line_tracker import LineTracker
 
@@ -37,7 +39,7 @@ from ..support.tuple_math import TupleMath
 
 from .envelope_tracker import EnvelopeTracker
 
-class VehicleTemplateTracker(ContextTracker):
+class VehicleTemplateTracker(ContextTracker, Drag):
     """
     Vehicle Template Tracker class
     """
@@ -163,15 +165,10 @@ class VehicleTemplateTracker(ContextTracker):
         _tracker.body = BoxTracker(
             self.name + '_body', corners=self.points.body, parent=self.base)
 
-        EmptyTracker.is_separated = True
-        _tracker.axle_group_1 = EmptyTracker(
-            self.name + '_group_1_transform', parent=self.base)
+        for _l in _tracker.body.lines:
+            _l.disable_drag_rotation()
 
-        EmptyTracker.is_separated = True
-        _tracker.axle_group_2 = EmptyTracker(
-            self.name + '_group_2_transform', parent=self.base)
-
-        return
+        return _tracker
         _tracker.axle_group_1.set_center(self.points.axles[0].center)
         _tracker.axle_group_2.set_center(self.points.axles[1].center)
 
@@ -274,6 +271,19 @@ class VehicleTemplateTracker(ContextTracker):
                     _wheel.center + (0.0,))
 
                 self.wheels[_wheel] = _lt
+
+    def on_select(self):
+        """
+        Override of Select.on_select()
+        """
+
+        print('Vehicle select occurred')
+
+        print(Select.selected)
+        #if self.mouse_state.button1.pressed:
+            
+        for _l in self.trackers.body.lines:
+            print(_l.name, _l.is_selected())
 
     def transform_points(self, points, node):
         """
