@@ -27,7 +27,7 @@ import math
 import json
 import os
 
-from ..support.tuple_math import TupleMath
+from support.tuple_math import TupleMath
 
 from .axis import Axis
 from .body import Body
@@ -184,11 +184,9 @@ class Vehicle(Body):
         #reference the turning axle and the farthest-back fixed axle
         if not is_fixed:
             self.turn_axle = _axle
-            print('turn axle = ', _axle.center)
 
         else:
             self.fixed_axle = self.axles[self.axle_dists.index(_min_dist)]
-            print('fixed axle = ', _axle.center)
 
     def set_minimum_radius(self, radius):
         """

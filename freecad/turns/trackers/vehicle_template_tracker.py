@@ -26,20 +26,23 @@ Vehicle Template Tracker class
 
 from types import SimpleNamespace
 
+import math
+
 import FreeCADGui as Gui
 
 from pivy_trackers.trait.drag import Drag
 from pivy_trackers.trait.select import Select
+from pivy_trackers.trait.text import Text
 
 from pivy_trackers.tracker.context_tracker import ContextTracker
 from pivy_trackers.tracker.box_tracker import BoxTracker
 from pivy_trackers.tracker.line_tracker import LineTracker
 
-from ..support.tuple_math import TupleMath
+from support.tuple_math import TupleMath
 
 from .envelope_tracker import EnvelopeTracker
 
-class VehicleTemplateTracker(ContextTracker, Drag):
+class VehicleTemplateTracker(ContextTracker, Drag, Text):
     """
     Vehicle Template Tracker class
     """
@@ -52,8 +55,8 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             'symbol' - vehicle type symbol ('UNK')
             'description' - description of vehicle type ('')
             'length' - total length (19.0)
-            'width - maximum width (7.0)
-            'height - maximum height (4.25)
+            'width' - maximum width (7.0)
+            'height' - maximum height (4.25)
             'max_radius' - maximum turning radius (13.7)
             'min_angle' - minimum turning angle (radius controls)
             'pivot_offset' - distance of pivot point from front
@@ -120,7 +123,6 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             _cur_offset += 1.0
 
         _points.axles.append(_axle_2)
-
         _points.pivot = None
 
         if self.data['pivot_offset']:
@@ -165,10 +167,36 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         _tracker.body = BoxTracker(
             self.name + '_body', corners=self.points.body, parent=self.base)
 
-        for _l in _tracker.body.lines:
+        _lock_axes = [
+            (0.0, 1.0, 0.0),
+            (1.0, 0.0, 0.0),
+            (0.0, 1.0, 0.0),
+            (1.0, 0.0, 0.0)
+        ]
+
+        _offsets = [
+            ((0.0, 1.0, 0.0), 0.0),
+            ((1.0, 0.0, 0.0), -math.pi / 2.0),
+            ((0.0, -2.0, 0.0), math.pi),
+            ((-1.0, 0.0, 0.0), math.pi / 2.0)
+        ]
+
+        for _i, _l in enumerate(_tracker.body.lines):
+
             _l.disable_drag_rotation()
+            _l.drag_axis = _lock_axes[_i]
+            _l.text.set_visibility(True)
+
+            _lbl = _l.add_label('LINE ' + str(_i), 'LINE '+ str(_i))
+            _lbl.offset = _offsets[_i][0]
+
+            _lbl.set_translation(
+                TupleMath.mean(_l.coordinates))
+
+            _lbl.set_rotation(_offsets[_i][1])
 
         return _tracker
+
         _tracker.axle_group_1.set_center(self.points.axles[0].center)
         _tracker.axle_group_2.set_center(self.points.axles[1].center)
 
@@ -181,12 +209,10 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             parent=_tracker.axle_group_2)
 
         _tracker.axle_1.set_vertex_groups(
-            (2,)*(len(self.points.axles[0].points) / 2.0)
-        )
+            (2,)*(len(self.points.axles[0].points) / 2.0))
 
         _tracker.axle_2.set_vertex_groups(
-            (2,)*(len(self.points.axles[0].points) / 2.0)
-        )
+            (2,)*(len(self.points.axles[0].points) / 2.0))
 
         _tracker.pivot = None
 
@@ -272,18 +298,18 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
                 self.wheels[_wheel] = _lt
 
-    def on_select(self):
+    def drag_mouse_event(self, user_data, event_cb):
         """
-        Override of Select.on_select()
+        Override of Select mouse event
         """
 
-        print('Vehicle select occurred')
+        if self.mouse_state.button1.dragging:
 
-        print(Select.selected)
-        #if self.mouse_state.button1.pressed:
-            
-        for _l in self.trackers.body.lines:
-            print(_l.name, _l.is_selected())
+            for _i, _l in enumerate(self.trackers.body.lines):
+                _label = _l.labels[0]
+                _label.set_text(str(_l.get_length()))
+
+        super().select_mouse_event(user_data, event_cb)
 
     def transform_points(self, points, node):
         """

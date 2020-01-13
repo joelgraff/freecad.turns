@@ -23,7 +23,7 @@
 Path model object
 """
 
-from ..support.tuple_math import TupleMath
+from support.tuple_math import TupleMath
 
 from .path_segment import PathSegment
 

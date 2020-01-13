@@ -31,7 +31,7 @@ from pivy_trackers.coin.coin_styles import CoinStyles as Styles
 from pivy_trackers.trait.base import Base
 from pivy_trackers.tracker.line_tracker import LineTracker
 
-from ..support.tuple_math import TupleMath
+from support.tuple_math import TupleMath
 from ..support.line_segment import LineSegment
 
 class EnvelopeTracker(Base):

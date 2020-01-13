@@ -1,4 +1,5 @@
 {
-    "python.pythonPath": "C:\\Users\\GRAFFJC\\AppData\\Local\\Programs\\Python\\Python36\\python.exe",
-    "python.linting.pylintEnabled": true
+    "python.pythonPath": "C:\\Program Files (x86)\\Python38-32\\python.exe",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true
 }
