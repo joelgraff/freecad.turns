@@ -32,7 +32,6 @@ import FreeCADGui as Gui
 
 from pivy_trackers.trait.drag import Drag
 from pivy_trackers.trait.select import Select
-from pivy_trackers.trait.text import Text
 
 from pivy_trackers.tracker.context_tracker import ContextTracker
 from pivy_trackers.tracker.box_tracker import BoxTracker
@@ -42,7 +41,7 @@ from support.tuple_math import TupleMath
 
 from .envelope_tracker import EnvelopeTracker
 
-class VehicleTemplateTracker(ContextTracker, Drag, Text):
+class VehicleTemplateTracker(ContextTracker, Drag):
     """
     Vehicle Template Tracker class
     """
@@ -73,6 +72,9 @@ class VehicleTemplateTracker(ContextTracker, Drag, Text):
 
         self.trackers = self.build_trackers()
         self.set_visibility()
+
+        self.set_translate_increment(1.0)
+        self.set_rotate_increment(0.30)
 
     def build_points(self):
         """
@@ -157,6 +159,11 @@ class VehicleTemplateTracker(ContextTracker, Drag, Text):
 
         return data
 
+    def get_label(self, lablel, indices):
+        """
+        Recalculate line length and update label
+        """
+
     def build_trackers(self):
         """
         Build trackers from the validated data set
@@ -181,19 +188,39 @@ class VehicleTemplateTracker(ContextTracker, Drag, Text):
             ((-1.0, 0.0, 0.0), math.pi / 2.0)
         ]
 
+        _indices = [(1, 2), (0, 1), (1, 2), (0, 1)]
+
+        _lbl_lambda = lambda lbl, idx:\
+            lambda _lbl=lbl, _idx=idx:\
+                lambda _u_d, _e_c, _p1=_lbl, _p2=_idx:\
+                    _lbl.set_text(str(self.get_label(_p1, _p2)))
+
+        _labels = []
+
         for _i, _l in enumerate(_tracker.body.lines):
 
             _l.disable_drag_rotation()
             _l.drag_axis = _lock_axes[_i]
+
+            _lbl = _l.add_text('LINE ' + str(_i), 'LINE '+ str(_i))
+
             _l.text.set_visibility(True)
 
-            _lbl = _l.add_label('LINE ' + str(_i), 'LINE '+ str(_i))
-            _lbl.offset = _offsets[_i][0]
+            print (_l.coordinates)
+            _offset = TupleMath.add(
+                _offsets[_i][0], TupleMath.mean(_l.coordinates)
+            )
 
-            _lbl.set_translation(
+            _l.set_text_offset(_offset)
+
+            _l.set_text_translation(
                 TupleMath.mean(_l.coordinates))
 
-            _lbl.set_rotation(_offsets[_i][1])
+            _l.set_text_rotation(_offsets[_i][1])
+
+            _l.on_drag.callbacks.append(
+                _lbl_lambda(_lbl, _indices[_i])
+            )
 
         return _tracker
 
@@ -217,6 +244,7 @@ class VehicleTemplateTracker(ContextTracker, Drag, Text):
         _tracker.pivot = None
 
         if self.points.pivot:
+
             _tracker.pivot = BoxTracker(
                 self.name + '_pivot', corners=self.points.pivot,
                 parent=self.base)
@@ -297,19 +325,6 @@ class VehicleTemplateTracker(ContextTracker, Drag, Text):
                     _wheel.center + (0.0,))
 
                 self.wheels[_wheel] = _lt
-
-    def drag_mouse_event(self, user_data, event_cb):
-        """
-        Override of Select mouse event
-        """
-
-        if self.mouse_state.button1.dragging:
-
-            for _i, _l in enumerate(self.trackers.body.lines):
-                _label = _l.labels[0]
-                _label.set_text(str(_l.get_length()))
-
-        super().select_mouse_event(user_data, event_cb)
 
     def transform_points(self, points, node):
         """
