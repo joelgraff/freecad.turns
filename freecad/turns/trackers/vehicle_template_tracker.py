@@ -207,18 +207,16 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             _l.text.set_visibility(True)
 
             print (_l.coordinates)
+
             _offset = TupleMath.add(
                 _offsets[_i][0], TupleMath.mean(_l.coordinates)
             )
 
-            _l.set_text_offset(_offset)
-
-            _l.set_text_translation(
-                TupleMath.mean(_l.coordinates))
+            _l.text_offset = _offset
 
             _l.set_text_rotation(_offsets[_i][1])
 
-            _l.on_drag.callbacks.append(
+            _l.on_drag_callbacks.append(
                 _lbl_lambda(_lbl, _indices[_i])
             )
 
