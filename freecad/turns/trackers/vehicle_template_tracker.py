@@ -159,10 +159,23 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
         return data
 
-    def get_label(self, lablel, indices):
+    def get_label(self, label, indices):
         """
         Recalculate line length and update label
         """
+
+        print('getting label', label, indices)
+
+    def _get_drag_length(self, line):
+        """
+        Return the length of the line based on it's drag coordinates
+        """
+
+        _coords = line.get_partial_transformed()[0]
+
+        print(_coords)
+        print(TupleMath.subtract(_coords))
+        return TupleMath.length(TupleMath.subtract(_coords))
 
     def build_trackers(self):
         """
@@ -188,12 +201,11 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             ((-1.0, 0.0, 0.0), math.pi / 2.0)
         ]
 
-        _indices = [(1, 2), (0, 1), (1, 2), (0, 1)]
+        _indices = [(1, 3), (0, 2), (1, 3), (0, 2)]
 
-        _lbl_lambda = lambda lbl, idx:\
-            lambda _lbl=lbl, _idx=idx:\
-                lambda _u_d, _e_c, _p1=_lbl, _p2=_idx:\
-                    _lbl.set_text(str(self.get_label(_p1, _p2)))
+        _lbl_lambda = lambda line1, line2:\
+            lambda u_d, p1=line1, p2=line2:\
+                line2.drag_text_update(str(self._get_drag_length(line1)))
 
         _labels = []
 
@@ -202,11 +214,9 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             _l.disable_drag_rotation()
             _l.drag_axis = _lock_axes[_i]
 
-            _lbl = _l.add_text('LINE ' + str(_i), 'LINE '+ str(_i))
+            _l.add_text('LINE ' + str(_i), 'LINE '+ str(_i))
 
             _l.text.set_visibility(True)
-
-            print (_l.coordinates)
 
             _offset = TupleMath.add(
                 _offsets[_i][0], TupleMath.mean(_l.coordinates)
@@ -214,11 +224,10 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
             _l.text_offset = _offset
 
-            _l.set_text_rotation(_offsets[_i][1])
+            for _j in _indices[_i]:
 
-            _l.on_drag_callbacks.append(
-                _lbl_lambda(_lbl, _indices[_i])
-            )
+                _line = _tracker.body.lines[_j]
+                _line.on_drag_callbacks.append(_lbl_lambda(_line, _l))
 
         return _tracker
 

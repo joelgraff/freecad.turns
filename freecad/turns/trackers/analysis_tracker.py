@@ -28,7 +28,7 @@ from types import SimpleNamespace
 
 import FreeCADGui as Gui
 
-from pivy_trackers.support.todo import todo
+from pivy_trackers.coin.todo import todo
 
 from pivy_trackers.coin.coin_styles import CoinStyles as Styles
 from pivy_trackers.trait.timer import Timer
