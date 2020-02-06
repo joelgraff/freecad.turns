@@ -23,7 +23,7 @@
 Swept Path Analysis
 """
 
-from support.singleton import Singleton
+from ..support.singleton import Singleton
 
 class Analyzer(metaclass=Singleton):
     """

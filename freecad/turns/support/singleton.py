@@ -19,26 +19,40 @@
 #* USA                                                                 *
 #*                                                                     *
 #***********************************************************************
+
 """
-Wheel model object
+Singleton class definition
 """
 
-from .body import Body
-from ..support.tuple_math import TupleMath
-
-class Wheel(Body):
+class Singleton(type):
     """
-    Wheel model object
+    Singleton implementation
     """
+    _instances = {}
 
-    def __init__(self, center, width=0.8333, diameter=1.75):
+    def __call__(cls, *args, **kwargs):
         """
-        Constructor
+        Class __call__() method
+        """
+        if cls not in cls._instances:
+            cls._instances[cls] = \
+                super(Singleton, cls).__call__(*args, **kwargs)
+
+        return cls._instances[cls]
+
+    def instance_of(cls):
+        """
+        Test for instance match
+        """
+        if cls in cls._instances:
+            return cls._instances[cls]
+
+        return None
+
+    def finish(cls):
+        """
+        Remove Singleton instance
         """
 
-        self.width = width
-        self.diameter = diameter
-        self.angle = 0.0
-        self.center = center
-
-        super().__init__([diameter, width], self.center)
+        if cls in Singleton._instances:
+            del Singleton._instances[cls]

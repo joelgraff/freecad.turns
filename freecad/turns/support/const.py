@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #***********************************************************************
-#* Copyright (c) 2019 Joel Graff <monograff76@gmail.com>               *
+#* Copyright (c) 2018 Joel Graff <monograff76@gmail.com>               *
 #*                                                                     *
 #* This program is free software; you can redistribute it and/or modify*
 #* it under the terms of the GNU Lesser General Public License (LGPL)  *
@@ -19,26 +19,51 @@
 #* USA                                                                 *
 #*                                                                     *
 #***********************************************************************
+
 """
-Wheel model object
+Constant class definition
 """
 
-from .body import Body
-from ..support.tuple_math import TupleMath
+__title__ = "Const.py"
+__author__ = "Joel Graff"
+__url__ = "https://www.freecadweb.org"
 
-class Wheel(Body):
+class MetaConst(type):
     """
-    Wheel model object
+    Metaclass to enforce constant-like behaviors
     """
 
-    def __init__(self, center, width=0.8333, diameter=1.75):
+    def __getattr__(cls, key):
         """
-        Constructor
+        Default getter
+        """
+        #pylint: disable=unsubscriptable-object
+        assert(key in cls.__dict__),\
+            'Constant {} not found in {}'.format(str(key), str(cls))
+
+        return cls[key]
+
+    def __setattr__(cls, key, value):
+        """
+        Default setter
+        """
+        raise TypeError
+
+class Const(object, metaclass=MetaConst):
+    """
+    Const class for subclassing
+    """
+
+    def __getattr__(self, name):
+        """
+        Default getter
         """
 
-        self.width = width
-        self.diameter = diameter
-        self.angle = 0.0
-        self.center = center
+        return self[name]
 
-        super().__init__([diameter, width], self.center)
+    def __setattr__(self, name, value):
+        """
+        Default setter
+        """
+
+        raise TypeError

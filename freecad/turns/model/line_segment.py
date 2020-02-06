@@ -25,7 +25,7 @@ Line Segment class definition
 
 import math
 
-from support.tuple_math import TupleMath
+from ..support.tuple_math import TupleMath
 
 class LineSegment():
 

@@ -37,7 +37,7 @@ from pivy_trackers.tracker.context_tracker import ContextTracker
 from pivy_trackers.tracker.box_tracker import BoxTracker
 from pivy_trackers.tracker.line_tracker import LineTracker
 
-from support.tuple_math import TupleMath
+from ..support.tuple_math import TupleMath
 
 from .envelope_tracker import EnvelopeTracker
 
@@ -173,8 +173,6 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
         _coords = line.get_partial_transformed()[0]
 
-        print(_coords)
-        print(TupleMath.subtract(_coords))
         return TupleMath.length(TupleMath.subtract(_coords))
 
     def build_trackers(self):
