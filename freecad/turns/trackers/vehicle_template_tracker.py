@@ -166,6 +166,15 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
         print('getting label', label, indices)
 
+    def _update_partial_lines(self, full_line, partial_line):
+        """
+        Update the line which shares endpoints with this line and was
+        partially dragged
+        """
+
+        partial_line.after_drag(None)
+        partial_line.drag_text_update(str(self._get_drag_length(partial_line)))
+
     def _get_drag_length(self, line):
         """
         Return the length of the line based on it's drag coordinates
@@ -201,12 +210,13 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
         _indices = [(1, 3), (0, 2), (1, 3), (0, 2)]
 
-        _lbl_lambda = lambda line1, line2:\
-            lambda u_d, p1=line1, p2=line2:\
-                line2.drag_text_update(str(self._get_drag_length(line1)))
+        _lbl_lambda = lambda full_line, partial_line:\
+            lambda u_d, p1=full_line, p2=partial_line:\
+                self._update_partial_lines(p1, p2)
 
         _labels = []
 
+        #iterate the lines and set up callbacks to the adjoining lines
         for _i, _l in enumerate(_tracker.body.lines):
 
             _l.disable_drag_rotation()
