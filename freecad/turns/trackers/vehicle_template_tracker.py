@@ -164,25 +164,26 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         Recalculate line length and update label
         """
 
-        print('getting label', label, indices)
-
-    def _update_partial_lines(self, full_line, partial_line):
+    def _on_drag_text(self, partial_line):
         """
         Update the line which shares endpoints with this line and was
         partially dragged
         """
 
-        partial_line.after_drag(None)
-        partial_line.drag_text_update(str(self._get_drag_length(partial_line)))
+        _coords = partial_line.get_drag_coordinates()
+        _len = TupleMath.length(_coords)
 
-    def _get_drag_length(self, line):
+        partial_line.drag_text_update(str(TupleMath.length(_coords)))
+
+    def _after_drag_text(self, partial_line):
         """
-        Return the length of the line based on it's drag coordinates
+        Update the text for partially dragged lines at end of operation
         """
 
-        _coords = line.get_partial_transformed()[0]
+        _coords = partial_line.get_drag_coordinates()
+        _len = TupleMath.length(_coords)
 
-        return TupleMath.length(TupleMath.subtract(_coords))
+        partial_line.set_text(str(TupleMath.length(_coords)))
 
     def build_trackers(self):
         """
@@ -210,9 +211,11 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
         _indices = [(1, 3), (0, 2), (1, 3), (0, 2)]
 
-        _lbl_lambda = lambda full_line, partial_line:\
-            lambda u_d, p1=full_line, p2=partial_line:\
-                self._update_partial_lines(p1, p2)
+        _on_lambda = lambda partial_line:\
+            lambda u_d, p1=partial_line: self._on_drag_text(p1)
+
+        _after_lambda = lambda partial_line:\
+            lambda u_d, p1=partial_line: self._after_drag_text(p1)
 
         _labels = []
 
@@ -235,7 +238,8 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             for _j in _indices[_i]:
 
                 _line = _tracker.body.lines[_j]
-                _line.on_drag_callbacks.append(_lbl_lambda(_line, _l))
+                _line.on_drag_callbacks.append(_on_lambda(_l))
+                _line.after_drag_callbacks.append(_after_lambda(_l))
 
         return _tracker
 

@@ -54,7 +54,7 @@ class TupleMath(Const):
             _result = lhs[0]
 
             for _t in lhs[1:]:
-                _result = TupleMath.subtract(_result, _t)
+                _result = TupleMath.add(_result, -_t)
 
             return _result
 
@@ -149,7 +149,24 @@ class TupleMath(Const):
     def length(tpl):
         """
         Calculate the length of a tuple
+        If a list of tuples, length is caculated as distance between points
         """
+
+        #distance between a list of points
+        if isinstance(tpl[0], Iterable):
+
+            _len = 0.0
+            _prev = tpl[0]
+
+            for _t in tpl[1:]:
+                _len += TupleMath.length(TupleMath.subtract(_t, _prev))
+
+            if not _len:
+                _len = TupleMath.length(_prev)
+
+            return _len
+
+        #vector length from origin to point
         return math.sqrt(sum([_v*_v for _v in tpl]))
 
     @staticmethod
