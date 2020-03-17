@@ -33,9 +33,13 @@ import FreeCADGui as Gui
 from pivy_trackers.trait.drag import Drag
 from pivy_trackers.trait.select import Select
 
+from pivy_trackers.coin.coin_group import CoinGroup
 from pivy_trackers.tracker.context_tracker import ContextTracker
 from pivy_trackers.tracker.box_tracker import BoxTracker
 from pivy_trackers.tracker.line_tracker import LineTracker
+from pivy_trackers.coin.coin_enums import NodeTypes as Nodes
+
+from pivy_trackers.coin.todo import todo
 
 from ..support.tuple_math import TupleMath
 
@@ -90,43 +94,38 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
         _points.axles = []
 
-        _axle_1 = SimpleNamespace()
-        _axle_1.center = (_l - self.data['axle_offset_1'], 0.0)
-        _axle_1.points = []
+        #add axle points
+        for _i in range(0, 2):
 
-        _cur_offset = -int((self.data['axle_count_1']-1.0)/2.0)\
-            * self.data['axle_offset_1']
+            _off = 'axle_offset_' + str(_i)
+            _count = 'axle_count_' + str(_i)
 
-        for _i in range(0, self.data['axle_count_1']):
+            _axle = SimpleNamespace()
 
-            _axle_1.points.append((
-                (_axle_1.center[0] + _cur_offset, _w - 1.0),
-                (_axle_1.center[0] + _cur_offset, -(_w - 1.0)),
-            ))
+            #distance measured from center of body
+            _axle.center = (_l - self.data[_off], 0.0)
+            _axle.points = []
 
-            _cur_offset += 1.0
+            _cur_incr = self.data['axle_spacing_' + str(_i)]
+            _cur_offset = (_cur_incr * (self.data[_count] - 1) / 2.0)
 
-        _points.axles.append(_axle_1)
+            #add axles
+            for _j in range(0, self.data[_count]):
 
-        _axle_2 = SimpleNamespace()
-        _axle_2.center = (_axle_1.center[0] - self.data['axle_offset_2'], 0.0)
-        _axle_2.points = []
+                _axle.points.append((
+                    (_axle.center[0] + _cur_offset, _w - 1.0),
+                    (_axle.center[0] + _cur_offset, -(_w - 1.0)),
+                ))
 
-        _cur_offset =\
-            -int((self.data['axle_count_2']-1.0)/2.0) * self.data['axle_offset_2']
+                _cur_offset -= _cur_incr
 
-        for _i in range(0, self.data['axle_count_2']):
+            _points.axles.append(_axle)
 
-            _axle_2.points.append((
-                (_axle_2.center[0] + _cur_offset, _w - 1.0),
-                (_axle_2.center[0] + _cur_offset, -(_w - 1.0)),
-            ))
+            _l = _axle.center[0]
 
-            _cur_offset += 1.0
-
-        _points.axles.append(_axle_2)
         _points.pivot = None
 
+        #add pivot point
         if self.data['pivot_offset']:
 
             _pvt = _l - self.data['pivot_offset']
@@ -150,12 +149,12 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         data['height'] = 4.25
         data['max_radius'] = 13.7
         data['pivot_offset'] = 0.0
-        data['axle_count_1'] = 1
-        data['axle_offset_1'] = 4.0
-        data['axle_spacing_1'] = 0.0
-        data['axle_count_2'] = 2
-        data['axle_offset_2'] = 33.0
-        data['axle_spacing_2'] = 2.0
+        data['axle_count_0'] = 1
+        data['axle_offset_0'] = 4.0
+        data['axle_spacing_0'] = 5.0
+        data['axle_count_1'] = 2
+        data['axle_offset_1'] = 32.0
+        data['axle_spacing_1'] = 4.0
 
         return data
 
@@ -173,6 +172,7 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         _coords = partial_line.get_drag_coordinates()
         _len = TupleMath.length(_coords)
 
+        print(self.name, 'partial drag update', _coords)
         partial_line.drag_text_update(str(TupleMath.length(_coords)))
 
     def _after_drag_text(self, partial_line):
@@ -180,10 +180,25 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         Update the text for partially dragged lines at end of operation
         """
 
+        print('\n\t=========== {} ==============\n'.format(self.name))
+
         _coords = partial_line.get_drag_coordinates()
+        
+        if _coords is None:
+            return
+
         _len = TupleMath.length(_coords)
 
+        print('\t', _coords, _len)
+
         partial_line.set_text(str(TupleMath.length(_coords)))
+
+    def _line_on_key_up(self, key):
+        """
+        On key up called in the context of the line
+        """
+
+        print(self.name, 'key up on', str(key))
 
     def build_trackers(self):
         """
@@ -219,8 +234,12 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
         _labels = []
 
+        print('\n\t-------adjoining lines...------')
+
         #iterate the lines and set up callbacks to the adjoining lines
         for _i, _l in enumerate(_tracker.body.lines):
+
+            print('\n\tmain', _i)
 
             _l.disable_drag_rotation()
             _l.drag_axis = _lock_axes[_i]
@@ -235,30 +254,77 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
             _l.text_offset = _offset
 
+            #hook adjoining line drag callbacks to the current line
             for _j in _indices[_i]:
+
+                print('\t', _j)
 
                 _line = _tracker.body.lines[_j]
                 _line.on_drag_callbacks.append(_on_lambda(_l))
                 _line.after_drag_callbacks.append(_after_lambda(_l))
 
+            todo.delay(_l.set_text, str(_l.get_length()))
+
+            _l.on_key_up = self._line_on_key_up
+
         return _tracker
 
-        _tracker.axle_group_1.set_center(self.points.axles[0].center)
-        _tracker.axle_group_2.set_center(self.points.axles[1].center)
+        _tracker.axle_groups = []
+        _tracker.axles = []
+        _tracker.wheels = []
 
-        _tracker.axle_1 = LineTracker(
-            self.name + '_group_1', points=self.points.axle_group_1,
-            parent=_tracker.axle_group_1)
+        for _i in range(0, 2):
 
-        _tracker.axle_2 = LineTracker(
-            self.name + '_group_2', points=self.points.axle_group_2,
-            parent=_tracker.axle_group_2)
+            _group = CoinGroup(
+                is_separated=True, is_switched=False,
+                parent=self.base, name=self.name + '_AXLE_GROUP_' + str(_i)
+            )
 
-        _tracker.axle_1.set_vertex_groups(
-            (2,)*(len(self.points.axles[0].points) / 2.0))
+            _group.transform = _group.add_node(
+                Nodes.TRANSFORM, _group.name + '_transform')
 
-        _tracker.axle_2.set_vertex_groups(
-            (2,)*(len(self.points.axles[0].points) / 2.0))
+            _group.set_center(self.points.axles[_i].center + (0.0,))
+            
+            #build the undercarriage axles
+            for _pair in self.points.axles[_i].points:
+
+                _p = [_v + (0.0,) for _v in _pair]
+
+                print (_p)
+
+                _axle = LineTracker(
+                        _group.name + '_AXLE_' + str(_i), points=_p, parent=_group)
+                
+                _left = _tracker.body.lines[0]
+                _right = _tracker.body.lines[1]
+
+                #_left.link_geometry(_axle, -1, 0)
+                #_right.link_geometry(_axle, -1, 1)
+
+                _tracker.axles.append(_axle)
+                _tire = (1.0, 0.5, 0.0)
+                _tire_inv = (-1.0, 0.5, 0.0)
+
+                #generate wheels
+                for _p in _pair:
+
+                    _corners = (
+                        TupleMath.add(_p, _tire_inv),
+                        TupleMath.subtract(_p, _tire_inv)
+                    )
+
+                    _wheel = BoxTracker(
+                        _axle.name + '_WHEEL_' + str(_i), corners=_corners,
+                        is_resizeable=False, parent=_group.top
+                    )
+
+            _tracker.axle_groups.append(_group)
+
+        #_tracker.axle_1.set_vertex_groups(
+        #    (2,)*(len(self.points.axles[0].points) / 2.0))
+
+        #_tracker.axle_2.set_vertex_groups(
+        #    (2,)*(len(self.points.axles[0].points) / 2.0))
 
         _tracker.pivot = None
 
