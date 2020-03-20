@@ -163,24 +163,27 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         Recalculate line length and update label
         """
 
-    def _on_drag_text(self, partial_line):
+    def _on_drag_text(self, full_line, partial_line):
         """
         Update the line which shares endpoints with this line and was
         partially dragged
         """
 
+        if not full_line.is_full_drag:
+            return
+
         _coords = partial_line.get_drag_coordinates()
         _len = TupleMath.length(_coords)
 
-        print(self.name, 'partial drag update', _coords)
         partial_line.drag_text_update(str(TupleMath.length(_coords)))
 
-    def _after_drag_text(self, partial_line):
+    def _after_drag_text(self, full_line, partial_line):
         """
         Update the text for partially dragged lines at end of operation
         """
 
-        print('\n\t=========== {} ==============\n'.format(self.name))
+        if not full_line.is_full_drag:
+            return
 
         _coords = partial_line.get_drag_coordinates()
         
@@ -188,8 +191,6 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             return
 
         _len = TupleMath.length(_coords)
-
-        print('\t', _coords, _len)
 
         partial_line.set_text(str(TupleMath.length(_coords)))
 
@@ -226,20 +227,16 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
         _indices = [(1, 3), (0, 2), (1, 3), (0, 2)]
 
-        _on_lambda = lambda partial_line:\
-            lambda u_d, p1=partial_line: self._on_drag_text(p1)
+        _on_lambda = lambda full_line, partial_line:\
+            lambda u, p=full_line, q=partial_line: self._on_drag_text(p, q)
 
-        _after_lambda = lambda partial_line:\
-            lambda u_d, p1=partial_line: self._after_drag_text(p1)
+        _after_lambda = lambda full_line, partial_line:\
+            lambda u, p=full_line, q=partial_line: self._after_drag_text(p, q)
 
         _labels = []
 
-        print('\n\t-------adjoining lines...------')
-
         #iterate the lines and set up callbacks to the adjoining lines
         for _i, _l in enumerate(_tracker.body.lines):
-
-            print('\n\tmain', _i)
 
             _l.disable_drag_rotation()
             _l.drag_axis = _lock_axes[_i]
@@ -257,11 +254,9 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             #hook adjoining line drag callbacks to the current line
             for _j in _indices[_i]:
 
-                print('\t', _j)
-
                 _line = _tracker.body.lines[_j]
-                _line.on_drag_callbacks.append(_on_lambda(_l))
-                _line.after_drag_callbacks.append(_after_lambda(_l))
+                _l.on_drag_callbacks.append(_on_lambda(_l, _line))
+                _l.after_drag_callbacks.append(_after_lambda(_l, _line))
 
             todo.delay(_l.set_text, str(_l.get_length()))
 
