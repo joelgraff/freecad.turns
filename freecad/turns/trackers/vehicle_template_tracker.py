@@ -173,6 +173,10 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             return
 
         _coords = partial_line.get_drag_coordinates()
+
+        if not _coords:
+            return
+
         _len = TupleMath.length(_coords)
 
         partial_line.drag_text_update(str(TupleMath.length(_coords)))
@@ -262,7 +266,7 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
             _l.on_key_up = self._line_on_key_up
 
-        return _tracker
+        #return _tracker
 
         _tracker.axle_groups = []
         _tracker.axles = []
@@ -279,27 +283,26 @@ class VehicleTemplateTracker(ContextTracker, Drag):
                 Nodes.TRANSFORM, _group.name + '_transform')
 
             _group.set_center(self.points.axles[_i].center + (0.0,))
-            
+
             #build the undercarriage axles
-            for _pair in self.points.axles[_i].points:
+            for _j, _pair in enumerate(self.points.axles[_i].points):
 
                 _p = [_v + (0.0,) for _v in _pair]
 
-                print (_p)
-
                 _axle = LineTracker(
-                        _group.name + '_AXLE_' + str(_i), points=_p, parent=_group)
+                        _group.name + '_AXLE_' + str(_j), points=_p, parent=_group)
                 
                 _left = _tracker.body.lines[0]
-                _right = _tracker.body.lines[1]
+                _right = _tracker.body.lines[2]
 
-                #_left.link_geometry(_axle, -1, 0)
-                #_right.link_geometry(_axle, -1, 1)
+                _left.link_geometry(_axle, 1, 0)
+                _right.link_geometry(_axle, 1, 1)
 
                 _tracker.axles.append(_axle)
                 _tire = (1.0, 0.5, 0.0)
                 _tire_inv = (-1.0, 0.5, 0.0)
 
+                continue
                 #generate wheels
                 for _p in _pair:
 
@@ -322,6 +325,8 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         #    (2,)*(len(self.points.axles[0].points) / 2.0))
 
         _tracker.pivot = None
+
+        return _tracker
 
         if self.points.pivot:
 
