@@ -190,7 +190,7 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             return
 
         _coords = partial_line.get_drag_coordinates()
-        
+
         if _coords is None:
             return
 
@@ -291,12 +291,16 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
                 _axle = LineTracker(
                         _group.name + '_AXLE_' + str(_j), points=_p, parent=_group)
-                
-                _left = _tracker.body.lines[0]
-                _right = _tracker.body.lines[2]
 
-                _left.link_geometry(_axle, 1, 0)
-                _right.link_geometry(_axle, 1, 1)
+                _front = _tracker.body.lines[1]
+                _rear = _tracker.body.lines[3]
+
+                if _i == 0:
+                    _front.link_geometry(_axle, 0, 0)
+                    _front.link_geometry(_axle, 1, 1)
+
+#                else:
+#                    _rear.link_geometry(_axle, _j, 1-_j)
 
                 _tracker.axles.append(_axle)
                 _tire = (1.0, 0.5, 0.0)
