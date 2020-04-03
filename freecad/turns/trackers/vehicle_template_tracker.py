@@ -296,8 +296,8 @@ class VehicleTemplateTracker(ContextTracker, Drag):
                 _rear = _tracker.body.lines[3]
 
                 if _i == 0:
-                    _front.link_geometry(_axle, 0, 1, True)
-                    _front.link_geometry(_axle, 1, 0, True)
+                    _front.link_geometry(_axle, 0, [1], True)
+                    _front.link_geometry(_axle, 1, [0], True)
 
                 #else:
                 #    _rear.link_geometry(_axle, _j, 1-_j, True)
