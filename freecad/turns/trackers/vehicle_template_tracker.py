@@ -163,40 +163,35 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         Recalculate line length and update label
         """
 
-    def _on_drag_text(self, full_line, partial_line):
+    def _on_drag_text(self, line):
         """
         Update the line which shares endpoints with this line and was
         partially dragged
         """
 
-        if not full_line.is_full_drag:
-            return
+        print('\t---->>>> _on_drag_text:', line.name)
 
-        _coords = partial_line.get_drag_coordinates()
+        _coords = line.get_drag_coordinates()
+
+        print('--->>>', _coords)
 
         if not _coords:
             return
 
         _len = TupleMath.length(_coords)
 
-        partial_line.drag_text_update(str(TupleMath.length(_coords)))
+        print('--->>>', _len)
 
-    def _after_drag_text(self, full_line, partial_line):
+        line.drag_text_update(str(TupleMath.length(_coords)))
+
+    def _after_drag_text(self, line):
         """
         Update the text for partially dragged lines at end of operation
         """
+        _coords = line.get_drag_coordinates()
 
-        if not full_line.is_full_drag:
-            return
-
-        _coords = partial_line.get_drag_coordinates()
-
-        if _coords is None:
-            return
-
-        _len = TupleMath.length(_coords)
-
-        partial_line.set_text(str(TupleMath.length(_coords)))
+        if _coords:
+            line.set_text(str(TupleMath.length(_coords)))
 
     def _line_on_key_up(self, key):
         """
@@ -231,11 +226,8 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
         _indices = [(1, 3), (0, 2), (1, 3), (0, 2)]
 
-        _on_lambda = lambda full_line, partial_line:\
-            lambda u, p=full_line, q=partial_line: self._on_drag_text(p, q)
-
-        _after_lambda = lambda full_line, partial_line:\
-            lambda u, p=full_line, q=partial_line: self._after_drag_text(p, q)
+        _on_lambda = lambda line: lambda u, p=line: self._on_drag_text(p)
+        _after_lambda = lambda line: lambda u, p=line: self._after_drag_text(p)
 
         _labels = []
 
@@ -259,8 +251,8 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             for _j in _indices[_i]:
 
                 _line = _tracker.body.lines[_j]
-                _l.on_drag_callbacks.append(_on_lambda(_l, _line))
-                _l.after_drag_callbacks.append(_after_lambda(_l, _line))
+                _l.on_drag_callbacks.append(_on_lambda(_line))
+                _l.after_drag_callbacks.append(_after_lambda(_line))
 
             todo.delay(_l.set_text, str(_l.get_length()))
 
@@ -290,7 +282,7 @@ class VehicleTemplateTracker(ContextTracker, Drag):
                 _p = [_v + (0.0,) for _v in _pair]
 
                 _axle = LineTracker(
-                        _group.name + '_AXLE_' + str(_j), points=_p, parent=_group)
+                    _group.name + '_AXLE_' + str(_j), points=_p, parent=_group)
 
                 _front = _tracker.body.lines[1]
                 _rear = _tracker.body.lines[3]
