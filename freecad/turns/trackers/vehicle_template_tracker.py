@@ -38,7 +38,7 @@ from pivy_trackers.tracker.context_tracker import ContextTracker
 from pivy_trackers.tracker.box_tracker import BoxTracker
 from pivy_trackers.tracker.line_tracker import LineTracker
 from pivy_trackers.coin.coin_enums import NodeTypes as Nodes
-
+from pivy_trackers.coin.coin_enums import Keys
 from pivy_trackers.coin.todo import todo
 
 from ..support.tuple_math import TupleMath
@@ -187,12 +187,15 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         if _coords:
             line.set_text(str(TupleMath.length(_coords)))
 
-    def _line_on_key_up(self, key):
+    def _edit_length_keypress(self, line, key):
         """
         On key up called in the context of the line
         """
 
-        print(self.name, 'key up on', str(key))
+        if not line.is_selected():
+            return
+
+        print(line.name, 'selected')
 
     def build_trackers(self):
         """
@@ -250,7 +253,7 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
             todo.delay(_l.set_text, str(_l.get_length()))
 
-            _l.on_key_up = self._line_on_key_up
+            _l.set_keypress_callback(Keys.TAB, self._edit_length_keypress)
 
         #return _tracker
 
