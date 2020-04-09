@@ -108,5 +108,4 @@ venv.bak/
 .vscode/settings.json
 freecad/turns/resources/test_vehicle.ui.autosave
 freecad/turns/resources/vehicle_template.ui.autosave
-.vscode/settings.json
-.vscode/settings.json
+.pylintrc
