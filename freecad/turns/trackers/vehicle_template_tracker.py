@@ -169,18 +169,12 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         partially dragged
         """
 
-        print('\t---->>>> _on_drag_text:', line.name)
-
         _coords = line.get_drag_coordinates()
-
-        print('--->>>', _coords)
 
         if not _coords:
             return
 
         _len = TupleMath.length(_coords)
-
-        print('--->>>', _len)
 
         line.drag_text_update(str(TupleMath.length(_coords)))
 
