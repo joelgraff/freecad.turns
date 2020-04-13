@@ -248,6 +248,7 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         _tracker.body = BoxTracker(
             self.name + '_body', corners=self.points.body, parent=self.base)
 
+        print('points', self.points.body)
         _lock_axes = [
             (0.0, 1.0, 0.0),
             (1.0, 0.0, 0.0),
@@ -285,6 +286,7 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
             _l.text_offset = _offset
 
+            print('coords=',_l.coordinates)
             #hook adjoining line drag callbacks to the current line
             for _j in _indices[_i]:
 
