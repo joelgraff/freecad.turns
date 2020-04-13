@@ -236,7 +236,7 @@ class EnvelopeTracker(Base):
                     #iterate each segment in the track
                     for _l in range(_track[1], _track[2]):
 
-                        #pick the current segment from the track 
+                        #pick the current segment from the track
                         #and save it's manhattan distance from the path
                         _seg = _segments[_l]
 
@@ -297,7 +297,8 @@ class EnvelopeTracker(Base):
         _points = self.transform_points(_points, self.transform_node)
 
         for _i, _t in enumerate(_tracks):
-            _t[0].update(_t[0].coordinates + [_points[_i]], notify=False)
+            _t[0].update(
+                coordinates=_t[0].coordinates + [_points[_i]], notify=False)
 
     def finish(self):
         """

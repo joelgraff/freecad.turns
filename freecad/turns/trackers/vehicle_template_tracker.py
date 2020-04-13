@@ -43,6 +43,8 @@ from pivy_trackers.coin.todo import todo
 
 from ..support.tuple_math import TupleMath
 
+from ..resources.qt_frameless_ui import QtFramelessUi
+
 from .envelope_tracker import EnvelopeTracker
 
 class VehicleTemplateTracker(ContextTracker, Drag):
@@ -79,6 +81,18 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
         self.set_translate_increment(1.0)
         self.set_rotate_increment(0.30)
+
+        self.frameless_ui = QtFramelessUi(Gui.getMainWindow())
+        self.frameless_ui.set_signal_callback(self._edit_length_finished)
+
+        self.editing_line = None
+
+        _view_size = Gui.getMainWindow().centralWidget().size().toTuple()
+        _view_pos = Gui.getMainWindow().centralWidget().pos().toTuple()
+        _win_pos = Gui.getMainWindow().pos().toTuple()
+
+        self.ui_reference_point =\
+            TupleMath.add([_win_pos, _view_pos, (0.0, _view_size[1])])
 
     def build_points(self):
         """
@@ -187,6 +201,24 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         if _coords:
             line.set_text(str(TupleMath.length(_coords)))
 
+    def _edit_length_finished(self):
+        """
+        Callback triggered when line length editing has completed
+        """
+
+        print('hide')
+        self.frameless_ui.hide()
+
+        _len = None
+
+        try:
+            _len = float(self.frameless_ui.text())
+
+        except ValueError:
+            return
+
+        self.editing_line.set_length(_len)
+
     def _edit_length_keypress(self, line, key):
         """
         On key up called in the context of the line
@@ -196,6 +228,15 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             return
 
         print(line.name, 'selected')
+
+        _pos = self.view_state.view.getPointOnScreen(line.center[0], line.center[1], line.center[2])
+
+        _pos = TupleMath.add(self.ui_reference_point, (_pos[0], -_pos[1]))
+
+        self.editing_line = line
+        print(line, _pos)
+        self.frameless_ui.set_position(_pos)
+        self.frameless_ui.show()
 
     def build_trackers(self):
         """
