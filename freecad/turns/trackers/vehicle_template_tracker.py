@@ -202,6 +202,8 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         if _coords:
             line.set_text(str(TupleMath.length(_coords)))
 
+        self.base.dump()
+
     def _edit_length_finished(self):
         """
         Callback triggered when line length editing has completed
