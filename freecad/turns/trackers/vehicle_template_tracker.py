@@ -198,6 +198,7 @@ class VehicleTemplateTracker(ContextTracker, Drag):
         """
         _coords = line.get_drag_coordinates()
 
+        #self.base.dump()
         if _coords:
             line.set_text(str(TupleMath.length(_coords)))
 
@@ -280,6 +281,7 @@ class VehicleTemplateTracker(ContextTracker, Drag):
 
             _l.text.set_visibility(True)
 
+            print(_l.coordinates)
             _offset = TupleMath.add(
                 _offsets[_i][0], TupleMath.mean(_l.coordinates)
             )
@@ -297,8 +299,6 @@ class VehicleTemplateTracker(ContextTracker, Drag):
             todo.delay(_l.set_text, str(_l.get_length()))
 
             _l.set_keypress_callback(Keys.TAB, self._edit_length_keypress)
-
-        #return _tracker
 
         _tracker.axle_groups = []
         _tracker.axles = []
@@ -328,10 +328,12 @@ class VehicleTemplateTracker(ContextTracker, Drag):
                 _rear = _tracker.body.lines[3]
 
                 if _i == 0:
+                    print('linking', _axle.name, 'to front...')
                     _front.link_geometry(_axle, 0, [0], True)
                     _front.link_geometry(_axle, 1, [1], True)
 
                 else:
+                    print('linking', _axle.name, 'to rear...')
                     _rear.link_geometry(_axle, 1, [0], True)
                     _rear.link_geometry(_axle, 0, [1], True)
 
@@ -339,9 +341,8 @@ class VehicleTemplateTracker(ContextTracker, Drag):
                 _tire = (1.0, 0.5, 0.0)
                 _tire_inv = (-1.0, 0.5, 0.0)
 
-                continue
                 #generate wheels
-                for _p in _pair:
+                for _k, _p in enumerate(_pair):
 
                     _corners = (
                         TupleMath.add(_p, _tire_inv),
@@ -349,9 +350,13 @@ class VehicleTemplateTracker(ContextTracker, Drag):
                     )
 
                     _wheel = BoxTracker(
-                        _axle.name + '_WHEEL_' + str(_i), corners=_corners,
-                        is_resizeable=False, parent=_group.top
+                        _axle.name + '_WHEEL_' + str(_k), corners=_corners,
+                        is_resizeable=False, parent=_axle.geometry.top
                     )
+
+                    _wheel.is_draggable = False
+                    _wheel.update_transform = True
+                    _axle.link_geometry(_wheel, _k, -1)
 
             _tracker.axle_groups.append(_group)
 
