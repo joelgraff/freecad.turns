@@ -41,7 +41,7 @@ from pivy_trackers.coin.coin_enums import NodeTypes as Nodes
 from pivy_trackers.coin.coin_enums import Keys
 from pivy_trackers.coin.todo import todo
 
-from ..support.tuple_math import TupleMath
+from freecad_python_support.tuple_math import TupleMath
 
 from ..resources.qt_frameless_ui import QtFramelessUi
 

@@ -27,7 +27,7 @@ import math
 import json
 import os
 
-from ..support.tuple_math import TupleMath
+from freecad_python_support.tuple_math import TupleMath
 
 from .axis import Axis
 from .body import Body

@@ -24,7 +24,7 @@ Wheel model object
 """
 
 from .body import Body
-from ..support.tuple_math import TupleMath
+from freecad_python_support.tuple_math import TupleMath
 
 class Wheel(Body):
     """

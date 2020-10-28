@@ -27,7 +27,7 @@ Vehicle Tracker class
 from pivy_trackers.tracker.geometry_tracker import GeometryTracker
 from pivy_trackers.tracker.line_tracker import LineTracker
 
-from ..support.tuple_math import TupleMath
+from freecad_python_support.tuple_math import TupleMath
 
 from .envelope_tracker import EnvelopeTracker
 

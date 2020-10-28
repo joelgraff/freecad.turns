@@ -30,7 +30,7 @@ from PySide.QtGui import QStyle
 
 import FreeCADGui as Gui
 
-from ..support.singleton import Singleton
+from freecad_python_support.singleton import Singleton
 
 from .. import resources
 

@@ -1,6 +1,6 @@
 from PySide import QtCore, QtGui
 
-from ..support.tuple_math import TupleMath
+from freecad_python_support.tuple_math import TupleMath
 
 class QtFramelessUi(QtGui.QLineEdit):
     """

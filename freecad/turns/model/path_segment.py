@@ -23,7 +23,7 @@
 PathSegment model object
 """
 
-from ..support.tuple_math import TupleMath
+from freecad_python_support.tuple_math import TupleMath
 
 class PathSegment():
 
