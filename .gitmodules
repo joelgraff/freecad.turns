@@ -1,6 +1,3 @@
 [submodule "pivy_trackers"]
 	path = freecad/turns/trackers/core
 	url = https://github.com/joelgraff/pivy_trackers
-[submodule "freecad_python_support"]
-	path = freecard/turns/support/core
-	url = https://www.github.com/joelgraff/freecad_python_support

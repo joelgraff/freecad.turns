@@ -30,16 +30,16 @@ import math
 
 import FreeCADGui as Gui
 
-from pivy_trackers.trait.drag import Drag
-from pivy_trackers.trait.select import Select
+from pivy_trackers.core.trait.drag import Drag
+from pivy_trackers.core.trait.select import Select
 
-from pivy_trackers.coin.coin_group import CoinGroup
-from pivy_trackers.tracker.context_tracker import ContextTracker
-from pivy_trackers.tracker.box_tracker import BoxTracker
-from pivy_trackers.tracker.line_tracker import LineTracker
-from pivy_trackers.coin.coin_enums import NodeTypes as Nodes
-from pivy_trackers.coin.coin_enums import Keys
-from pivy_trackers.coin.todo import todo
+from pivy_trackers.core.coin.coin_group import CoinGroup
+from pivy_trackers.core.tracker.context_tracker import ContextTracker
+from pivy_trackers.core.tracker.box_tracker import BoxTracker
+from pivy_trackers.core.tracker.line_tracker import LineTracker
+from pivy_trackers.core.coin.coin_enums import NodeTypes as Nodes
+from pivy_trackers.core.coin.coin_enums import Keys
+from pivy_trackers.core.coin.todo import todo
 
 from freecad_python_support.tuple_math import TupleMath
 

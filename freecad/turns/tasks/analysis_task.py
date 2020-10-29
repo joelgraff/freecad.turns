@@ -33,7 +33,7 @@ import FreeCADGui as Gui
 from .. import resources
 
 from ..commands.path_editor_command import PathEditorCommand
-from ..trackers.analysis_tracker import AnalysisTracker
+from ..trackers.project.analysis_tracker import AnalysisTracker
 from ..model.vehicle import Vehicle
 
 from .base_task import BaseTask

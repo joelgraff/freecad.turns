@@ -26,10 +26,10 @@ Envelope Tracker class
 
 from types import SimpleNamespace
 
-from pivy_trackers.coin.coin_styles import CoinStyles as Styles
+from trackers.core.coin.coin_styles import CoinStyles as Styles
 
-from pivy_trackers.trait.base import Base
-from pivy_trackers.tracker.line_tracker import LineTracker
+from trackers.core.trait.base import Base
+from trackers.core.tracker.line_tracker import LineTracker
 
 from freecad_python_support.tuple_math import TupleMath
 from ..model.line_segment import LineSegment

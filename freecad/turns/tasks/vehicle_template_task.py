@@ -36,7 +36,7 @@ from .. import resources
 
 from ..model.vehicle import Vehicle
 
-from ..trackers.vehicle_template_tracker import VehicleTemplateTracker
+from ..trackers.project.vehicle_template_tracker import VehicleTemplateTracker
 
 from .base_task import BaseTask
 

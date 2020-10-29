@@ -28,16 +28,16 @@ from types import SimpleNamespace
 
 import FreeCADGui as Gui
 
-from pivy_trackers.coin.todo import todo
+from ..core.coin.todo import todo
 
-from pivy_trackers.coin.coin_styles import CoinStyles as Styles
-from pivy_trackers.trait.timer import Timer
-from pivy_trackers.tracker.context_tracker import ContextTracker
-from pivy_trackers.tracker.line_tracker import LineTracker
+from ..core.coin.coin_styles import CoinStyles as Styles
+from ..core.trait.timer import Timer
+from ..core.tracker.context_tracker import ContextTracker
+from ..core.tracker.line_tracker import LineTracker
 
-from ..model.analyzer import Analyzer
-from ..model.vehicle import Vehicle
-from ..model.path import Path
+from ...model.analyzer import Analyzer
+from ...model.vehicle import Vehicle
+from ...model.path import Path
 
 from .vehicle_tracker import VehicleTracker
 
