@@ -80,7 +80,7 @@ class VehicleTracker(GeometryTracker):
         _pts = [(0.0, 0.0, 0.0)]*6
 
         self.radius_tracker = LineTracker(
-            name='radius', coordinates=_pts, parent=self.base, selectable=False)
+            name='radius', points=_pts, parent=self.base, selectable=False)
 
         self.radius_tracker.line.numVertices.setValues(0, 2, (3, 3))
 
@@ -169,7 +169,7 @@ class VehicleTracker(GeometryTracker):
             _wheel_centers[0], _center, _wheel_centers[1]
         ]
 
-        self.radius_tracker.update(points=_pts, notify=False)
+        self.radius_tracker.update(coordinates=_pts, notify=False)
 
     def refresh(self):
         """

@@ -30,8 +30,6 @@ from PySide.QtGui import QStyle
 
 import FreeCADGui as Gui
 
-from freecad_python_support.singleton import Singleton
-
 from .. import resources
 
 from ..model.vehicle import Vehicle
@@ -118,9 +116,9 @@ class VehicleTemplateTask(BaseTask):
         return
 
         #set callbacks for tracker to update UI
-        self.tracker.to_step = self.to_cur_step
-        self.tracker.to_radius = self.to_cur_radius
-        self.tracker.to_angle = self.to_cur_angle
+        #self.tracker.to_step = self.to_cur_step
+        #self.tracker.to_radius = self.to_cur_radius
+        #self.tracker.to_angle = self.to_cur_angle
 
         #button references
         _play = self.widgets.play_button
