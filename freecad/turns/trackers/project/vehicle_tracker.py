@@ -27,7 +27,7 @@ Vehicle Tracker class
 from ..core.tracker.geometry_tracker import GeometryTracker
 from ..core.tracker.line_tracker import LineTracker
 
-from ...support.core.tuple_math import TupleMath
+from ..core.support.core.tuple_math import TupleMath
 
 from .envelope_tracker import EnvelopeTracker
 
