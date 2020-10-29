@@ -80,7 +80,7 @@ class VehicleTracker(GeometryTracker):
         _pts = [(0.0, 0.0, 0.0)]*6
 
         self.radius_tracker = LineTracker(
-            name='radius', points=_pts, parent=self.base, selectable=False)
+            name='radius', coordinates=_pts, parent=self.base, selectable=False)
 
         self.radius_tracker.line.numVertices.setValues(0, 2, (3, 3))
 
