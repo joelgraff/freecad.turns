@@ -1,7 +1,6 @@
 import FreeCADGui as Gui
 
-from pivy_trackers.coin import coin_utils as utils
-from pivy_trackers.examples.select_drag.select_drag_tracker import SelectDragTracker
+from ...examples.select_drag.select_drag_tracker import SelectDragTracker
 
 def dump_graph():
 
@@ -16,7 +15,6 @@ def gen_tracker():
 
 def generate():
 
-    print ('\n################# BEFORE ################\n')
     dump_graph()
 
     return gen_tracker()
@@ -25,5 +23,4 @@ def finish(tracker):
 
     tracker.finish()
 
-    print ('\n################ AFTER #################\n')
     dump_graph()

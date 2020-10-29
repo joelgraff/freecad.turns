@@ -1,7 +1,7 @@
 
-from pivy_trackers.trait.message import Message
-from pivy_trackers.trait.message_types import MessageTypes
-from pivy_trackers.trait.message_data import MessageData
+from ..trait.message import Message
+from ..trait.message_types import MessageTypes
+from ..trait.message_data import MessageData
 
 class MyMessager(Message):
 

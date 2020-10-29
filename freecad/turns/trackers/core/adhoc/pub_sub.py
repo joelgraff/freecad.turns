@@ -1,8 +1,8 @@
 
 import types
 
-from pivy_trackers.trait.publish import Publish
-from pivy_trackers.trait.subscribe import Subscribe
+from ..trait.publish import Publish
+from ..trait.subscribe import Subscribe
 
 MESSAGES = [1, 2, 4, 8]
 

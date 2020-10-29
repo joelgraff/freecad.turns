@@ -1,7 +1,7 @@
 import FreeCADGui as Gui
 
-from pivy_trackers.trait.base import Base
-from pivy_trackers.trait.timer import Timer
+from ..trait.base import Base
+from ..trait.timer import Timer
 
 class MyTimerTracker(Base, Timer):
 

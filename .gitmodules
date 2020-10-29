@@ -1,13 +1,6 @@
-[submodule "support"]
-	path = support
-	url = https://github.com/joelgraff/freecad_python_support
-	branch = release
-[submodule "freecad/turns/support"]
-	path = freecad/turns/support
-	url = https://github.com/joelgraff/freecad_python_support
 [submodule "pivy_trackers"]
-	path = pivy_trackers
+	path = freecad/turns/trackers/core
 	url = https://github.com/joelgraff/pivy_trackers
 [submodule "freecad_python_support"]
-	path = freecad_python_support
+	path = freecard/turns/support/core
 	url = https://www.github.com/joelgraff/freecad_python_support
