@@ -181,8 +181,8 @@ class VehicleTracker(GeometryTracker):
 
         _pos = self.vehicle.path.segments[self.vehicle.step].position
 
-        self.geometry.set_translation(_pos)
-        self.geometry.set_rotation(self.vehicle.orientation)
+        self.base.set_translation(_pos)
+        self.base.set_rotation(self.vehicle.orientation)
 
         for _axle in self.vehicle.axles:
 
@@ -195,7 +195,7 @@ class VehicleTracker(GeometryTracker):
                 self.wheels[_wheel].geometry.set_rotation(_wheel.angle)
 
         self.refresh_radius()
-        self.envelope.refresh()
+        self.envelope.refresh(_pos)
 
     def finish(self):
         """

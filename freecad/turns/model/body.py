@@ -23,7 +23,7 @@
 Body model object
 """
 
-from freecad_python_support. tuple_math import TupleMath
+from ..trackers.core.support.core.tuple_math import TupleMath
 from .axis import Axis
 
 class Body():

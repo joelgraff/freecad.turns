@@ -29,7 +29,7 @@ from types import SimpleNamespace
 from ..core.coin.coin_styles import CoinStyles as Styles
 
 from ..core.trait.base import Base
-from ..core.tracker.line_tracker import LineTracker
+from ..core.tracker.polyline_tracker import PolyLineTracker
 
 from ..core.support.core.tuple_math import TupleMath
 from ...model.line_segment import LineSegment
@@ -51,269 +51,115 @@ class EnvelopeTracker(Base):
         #initialize wih a separator, then reset to defaults
         super().__init__(name=name + '_ENVELOPE', parent=parent)
 
-        self.tracks = SimpleNamespace()
-        self.tracks.outer_left = []
-        self.tracks.outer_right = []
-        self.tracks.inner = []
-        self.tracks.envelope = None
-
-        self.transform_node = None
+        #identify starting point for each track
+        #calculate transformation from body center
+        #calculate transformation to track point
+        #combine transformations
+        #update poly lines
 
         self.data = data
 
-        self._build_envelope_tracks()
+        self.points = self.get_track_points()
+        self.transforms = self.get_track_transforms()
+        print('envelope points:', self.points)
+        self.trackers = self.generate_trackers()
+        self.body_start = data.center + (0.0,)
 
         self.set_visibility()
 
     def get_track_points(self):
         """
-        Return the track points in a list of tuple lists
+        Get the track points for the envelope tracks
         """
 
-        return (
-            [_t[0].coordinates for _t in \
-                self.tracks.outer_left + self.tracks.inner[0:2]],
+        _points = self.data.points
 
-            [_t[0].coordinates for _t in \
-                self.tracks.outer_right + self.tracks.inner[2:4]],
+        for _a in self.data.axles:
 
-            [_t[0].coordinates for _t in self.tracks.inner[4:]]
-        )
+            for _w in _a.wheels:
 
-    def _build_envelope_tracks(self):
+                _t = TupleMath.mean(_w.points[0:2])
+                _u = TupleMath.mean(_w.points[1:])
+                _v = _t
+
+                if (abs(_u[1]) > abs(_t[1])):
+                    _v = _u
+
+                _points += (_v,)
+
+        _points = tuple([_v + (0.0,) if len(_v) == 2 else _v for _v in _points])
+
+        return _points
+
+    def get_track_transforms(self):
         """
-        Create the envelope tracker objects
-        """
-
-        _track = lambda _n, _p, _r=self.base: LineTracker(
-            _n, _p, _r, selectable=False)
-
-        _point = lambda _x: lambda _y=_x: self.data.points[_y] + (0.0,)
-
-        _axle = lambda _x: lambda _y=_x: self.data.axles[_y].center + (0.0,)
-
-        _wheel = lambda _x, _y:\
-            lambda _a=_x, _b=_y: self.data.axles[_a].wheels[_b].center + (0.0,)
-
-        _veh = self.data
-
-        self.envelope = LineTracker('envelope', None, self.base)
-        self.envelope.set_style(Styles.ERROR)
-
-        self.tracks.inner = [
-            (_track('front_left', [_wheel(0, 0)()], self.base), _wheel(0, 0)),
-            (_track('rear_left', [_wheel(1, 0)()], self.base), _wheel(1, 0)),
-            (_track('front_right', [_wheel(0, 1)()], self.base), _wheel(0, 1)),
-            (_track('rear_right', [_wheel(1, 1)()], self.base), _wheel(1, 1)),
-            (_track('front_center', [_axle(0)()], self.base), _axle(0)),
-            (_track('rear_center', [_axle(1)()], self.base), _axle(1)),
-        ]
-
-        _axis = self.data.axis.vector + (0.0,)
-
-        for _i, _v in enumerate(self.data.points):
-
-            #transform the points according to the current vehicle tracker
-            _fn_pt = _point(_i)
-            _pt = _fn_pt()
-
-            _tpl = (_track('outer_' + str(_i), [_pt]), _fn_pt)
-
-            if TupleMath.point_direction(_pt, _axis) < 0:
-                self.tracks.outer_right.append(_tpl)
-
-            else:
-                self.tracks.outer_left.append(_tpl)
-
-        for _t in self.tracks.outer_left + self.tracks.outer_right:
-            _t[0].set_style(self.outer_style)
-
-        for _t in self.tracks.inner:
-            _t[0].set_style(self.inner_style)
-
-    def get_envelope(self, path):
-        """
-        Return the outer envelope
+        Get translation transforms for track points
         """
 
-        import timeit
+        _c = self.data.center + (0.0, )
 
-        _t = timeit.default_timer()
-        _x = self._build_envelope_segments(path)
-        _t1 = timeit.default_timer() - _t
+        return (TupleMath.subtract(_p, _c) for _p in self.points)
 
-        _t = timeit.default_timer()
-        _b = self._build_outer_envelope(_x)
-        _t2 = timeit.default_timer() - _t
-
-        return _b
-
-    def _build_outer_envelope(self, data):
+    def generate_trackers(self):
         """
-        Build the outer envelope
+        Generate Polyline Trackers for tracked points
         """
 
-        _outer_points = [_v[0] for _v in data]
-        _other_points = [_v[1:] for _v in data]
+        _r = [
+            PolyLineTracker(
+                'Track #{}'.format(str(_i)), [_p], self.base,
+                False, subdivided = False)\
+                for _i, _p in enumerate(self.points)
+            ]
 
-        #iterate each side
-        for _j, _side in enumerate(_other_points):
+        for _v in _r:
+            _v.set_visibility()
 
-            #iterate each track
-            for _k, _track in enumerate(_side):
+        return _r
 
-                #iterate the point / distance tuples
-                for _l, _point in enumerate(_track):
-
-                    if _outer_points[_j][_l][1] < _point[1]:
-                        _outer_points[_j][_l] = _point
-
-        return _outer_points
-
-    def _build_envelope_segments(self, path):
+    def refresh(self, position):
         """
-        Build a structure of track segments split by left / right side
+        Update the polylines, appending new track points
         """
 
-        _pts = self.get_track_points()
+        #print('\n\t>>>>>>> {} REFRESH <<<<<<<\n'.format(self.name))
+        _path_delta = TupleMath.subtract(self.body_start, self.data.center)
+        _orientation = self.data.orientation
 
-        _tracks = []
+        #transform the points by biulding a matrix combining the orientation and
+        #the translation append transformed points to the individual trackers
 
-        #there are three 'groups': left, right, and center tracks
-        for _group in _pts:
+        for _i, _t in enumerate(self.trackers):
+            #print('\n\t-=-=-=-=-=-=-=',self.name, position, _t.points)
 
-            _seg_group = []
-
-            #iterate the points in each group, building segments
-            #and storing the results.
-            for _points in _group:
-
-                _segments = [
-                    LineSegment(_points[_i], _points[_i+1])\
-                        for _i in range(0, len(_points)-1)
-                ]
-
-                _seg_group.append([_segments, 0, len(_segments)])
-
-            _tracks.append(_seg_group)
-
-        _null_ortho = LineSegment((0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
-        _result = []
-
-        for _i, _s in enumerate(_tracks[0:2]):
-            _result.append([])
-
-            for _j, _t in enumerate(_s):
-                _result[-1].append([])
-
-        #step along the path, building the individual orthos and the
-        #track segments that are on the left and right sides of each section
-        for _i, _seg in enumerate(path.segments):
-
-            _prev = path.segments[_i]
-
-            _lt = TupleMath.scale(TupleMath.ortho(_prev.tangent), 10)
-
-            #tangent / orthogonal pair
-            _o_segs = [_lt, TupleMath.scale(_lt, -1.0)]
-
-            #calculate end point for unit-length tangent and orthogonal
-            _o_segs = [TupleMath.add(_prev.position, _v) for _v in _o_segs]
-            _o_segs = [LineSegment(_prev.position, _v) for _v in _o_segs]
-
-            _pt = _prev.position
-
-            #iterate left and right sides
-            for _j, _side in enumerate(_tracks[0:2]):
-
-                #iterate each track on the side
-                for _k, _track in enumerate(_side):
-
-                    _pt_int = (_pt, 0.0)
-
-                    _segments = _track[0]
-
-                    #iterate each segment in the track
-                    for _l in range(_track[1], _track[2]):
-
-                        #pick the current segment from the track
-                        #and save it's manhattan distance from the path
-                        _seg = _segments[_l]
-
-                        _int = _o_segs[_j].is_intersecting(_seg)
-                        _dist = TupleMath.manhattan(_int[1], _pt)
-
-                        #if the segment intersects the orthogonal,
-                        #save the intersection constants and distance
-                        #and save the segment starting position
-                        if _int[0]:
-                            _pt_int = (_int[1], _dist)
-                            _track[1] = _l + 1
-                            break
-
-                        else:
-
-                            #test previous segment in case of a 'close fail'
-                            if _int[2][1] >= 0.0 or _l < 0:
-                                continue
-
-                            _seg = _segments[_l - 1]
-                            _int = _o_segs[_j].is_intersecting(_seg)
-                            _dist = TupleMath.manhattan(_int[1], _pt)
-
-                            if _int[0]:
-                                _pt_int = (_int[1], _dist)
-                                _track[1] = _l + 1
-                                break
-
-                    #save the intersection data
-                    _result[_j][_k].append(_pt_int)
-
-        return _result
+            _pts = tuple(_t.points) + (TupleMath.add(_t.points[0], position),)
+            _t.update(coordinates=_pts)
 
     def reset(self):
         """
         Reset the envelope tracker coordinates
         """
 
-        _tracks = self.tracks.inner\
-                + self.tracks.outer_left + self.tracks.outer_right
+        return
 
-        if not _tracks:
-            return
+        #_tracks = self.tracks.inner\
+        #        + self.tracks.outer_left + self.tracks.outer_right
 
-        for _i, _t in enumerate(_tracks):
-            _t[0].reset()
+        #if not _tracks:
+        #    return
 
-    def refresh(self):
+        #for _i, _t in enumerate(_tracks):
+        #    _t[0].reset()
+
+    def get_envelope(self, path):
         """
-        Update the envelope geometry
-        """
-
-        _tracks = self.tracks.inner\
-                + self.tracks.outer_left + self.tracks.outer_right
-
-        _points = [_t[1]() for _t in _tracks]
-        _points = self.transform_points(_points, self.transform_node)
-
-        for _i, _t in enumerate(_tracks):
-            _t[0].update(
-                coordinates=_t[0].coordinates + [_points[_i]], notify=False)
-
-    def finish(self):
-        """
-        Cleanup
+        Return the outer envelope
         """
 
-        if self.tracks:
+        return None
 
-            for _t in self.tracks.inner\
-                  + self.tracks.outer_left + self.tracks.outer_right:
+        print('getting envelope for path', path.points, path.segments)
+        _x = self._build_envelope_segments(path)
+        _b = self._build_outer_envelope(_x)
 
-                _t[0].finish()
-
-        self.tracks = None
-        self.data = None
-        self.transform_node = None
-
-        super().finish()
+        return _b        

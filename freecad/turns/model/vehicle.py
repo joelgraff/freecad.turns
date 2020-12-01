@@ -230,6 +230,11 @@ class Vehicle(Body):
             return
 
         self.orientation = \
+            -TupleMath.bearing(
+                self.path.segments[step].vector, (1.0, 0.0, 0.0)
+            )
+
+        _ori = \
             -TupleMath.signed_bearing(
                 self.path.segments[step].vector, (1.0, 0.0, 0.0)
             )

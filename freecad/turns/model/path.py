@@ -97,9 +97,9 @@ class Path():
 
             #test for flipped endpoints
             _flip_test = [
-                TupleMath.manhattan(_prev.StartPoint, _edge.StartPoint) < 0.01,
-                TupleMath.manhattan(_prev.EndPoint, _edge.EndPoint) < 0.01,
-                TupleMath.manhattan(_prev.StartPoint, _edge.EndPoint) < 0.01
+                TupleMath.manhattan(_prev.StartPoint, _edge.StartPoint)[0] < 0.01,
+                TupleMath.manhattan(_prev.EndPoint, _edge.EndPoint)[0] < 0.01,
+                TupleMath.manhattan(_prev.StartPoint, _edge.EndPoint)[0] < 0.01
             ]
 
             #flip the current edge points if either of last two cases

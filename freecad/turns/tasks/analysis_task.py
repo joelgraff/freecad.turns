@@ -32,6 +32,7 @@ import FreeCADGui as Gui
 
 from .. import resources
 
+from ..trackers.core.coin.todo import todo
 from ..commands.path_editor_command import PathEditorCommand
 from ..trackers.project.analysis_tracker import AnalysisTracker
 from ..model.vehicle import Vehicle
@@ -89,7 +90,9 @@ class AnalysisTask(BaseTask):
         self.is_playing = False
 
         self.tracker = AnalysisTracker()
-        self.tracker.insert_into_scenegraph()
+        self.tracker.insert_into_scenegraph(verbose=True)
+
+        todo.delay(self.tracker.base.dump, None)
 
     def setup_ui(self):
         """
